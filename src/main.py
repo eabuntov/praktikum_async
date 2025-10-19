@@ -7,3 +7,5 @@ app = FastAPI(title="Movies API with Elasticsearch")
 # --- Elasticsearch connection ---
 es = AsyncElasticsearch(hosts=["http://localhost:9200"])
 INDEX_NAME = "movies"
+INDEX_GENRES = "genres"
+INDEX_PEOPLE = "persons"
