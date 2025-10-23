@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Query
 from typing import Optional, List
 
+from src.api.caching import get_from_cache
 from src.main import app, INDEX_NAME, es, INDEX_GENRES, INDEX_PEOPLE
 from src.models.models import FilmWork, Genre, Person
 
@@ -8,6 +9,10 @@ from src.models.models import FilmWork, Genre, Person
 @app.get("/movies/{movie_id}", response_model=FilmWork)
 async def get_movie(movie_id: str):
     """Get a single movie by ID."""
+    cache_key = f"movie:{movie_id}"
+    cached = await get_from_cache(cache_key)
+    if cached:
+        return FilmWork(**cached)
     try:
         result = await es.get(index=INDEX_NAME, id=movie_id)
     except Exception:
@@ -28,6 +33,12 @@ async def list_movies(
     offset: int = Query(0, ge=0, description="Pagination offset")
 ):
     """Search, filter, and sort movies."""
+
+    cache_key = f"movies:list:{query}:{sort}:{sort_order}:{min_rating}:{max_rating}:{type}:{limit}:{offset}"
+    cached = await get_from_cache(cache_key)
+    if cached:
+        return [FilmWork(**doc) for doc in cached]
+
     must_clauses = []
     filter_clauses = []
 
@@ -82,6 +93,10 @@ async def list_movies(
 @app.get("/genres/{genre_id}", response_model=Genre)
 async def get_genre(genre_id: str):
     """Get a single genre by ID."""
+    cache_key = f"genre:{genre_id}"
+    cached = await get_from_cache(cache_key)
+    if cached:
+        return Genre(**cached)
     try:
         result = await es.get(index=INDEX_GENRES, id=genre_id)
     except Exception:
@@ -98,6 +113,10 @@ async def list_genres(
     offset: int = Query(0, ge=0)
 ):
     """List or search genres."""
+    cache_key = f"genres:list:{query}:{sort}:{sort_order}:{limit}:{offset}"
+    cached = await get_from_cache(cache_key)
+    if cached:
+        return [Genre(**doc) for doc in cached]
     must = []
     if query:
         must.append({
@@ -120,6 +139,10 @@ async def list_genres(
 @app.get("/people/{person_id}", response_model=Person)
 async def get_person(person_id: str):
     """Get a single person by ID."""
+    cache_key = f"person:{person_id}"
+    cached = await get_from_cache(cache_key)
+    if cached:
+        return Person(**cached)
     try:
         result = await es.get(index=INDEX_PEOPLE, id=person_id)
     except Exception:
@@ -136,6 +159,10 @@ async def list_people(
     offset: int = Query(0, ge=0)
 ):
     """List or search people."""
+    cache_key = f"people:list:{query}:{sort}:{sort_order}:{limit}:{offset}"
+    cached = await get_from_cache(cache_key)
+    if cached:
+        return [Person(**doc) for doc in cached]
     must = []
     if query:
         must.append({
