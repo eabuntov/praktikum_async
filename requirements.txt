@@ -1,4 +1,4 @@
-fastapi
-pytest
-psycopg2-binary
-elasticsearch
+fastapi==0.119.0
+pytest==8.4.2
+psycopg2-binary==2.9.11
+elasticsearch==9.1.1

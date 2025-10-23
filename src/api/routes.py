@@ -1,11 +1,19 @@
-from fastapi import HTTPException, Query
+from elasticsearch import AsyncElasticsearch
+from fastapi import HTTPException, Query, APIRouter
 from typing import Optional, List
 
-from src.main import app, INDEX_NAME, es, INDEX_GENRES, INDEX_PEOPLE
-from src.models.models import FilmWork, Genre, Person
+from models.models import FilmWork, Genre, Person
+
+movies_router = APIRouter(prefix="/movies", tags=["movies"])
+
+# --- Elasticsearch connection ---
+es = AsyncElasticsearch(hosts=["http://localhost:9200"])
+INDEX_NAME = "movies"
+INDEX_GENRES = "genres"
+INDEX_PEOPLE = "persons"
 
 
-@app.get("/movies/{movie_id}", response_model=FilmWork)
+@movies_router.get("/{movie_id}", response_model=FilmWork)
 async def get_movie(movie_id: str):
     """Get a single movie by ID."""
     try:
@@ -16,7 +24,7 @@ async def get_movie(movie_id: str):
     return FilmWork(id=result["_id"], **result["_source"])
 
 
-@app.get("/movies/", response_model=List[FilmWork])
+@movies_router.get("/", response_model=List[FilmWork])
 async def list_movies(
     query: Optional[str] = Query(None, description="Search by title or description"),
     sort: Optional[str] = Query(None, description="Sort by field, e.g. rating or creation_date"),
@@ -79,7 +87,7 @@ async def list_movies(
     return results
 
 
-@app.get("/genres/{genre_id}", response_model=Genre)
+@movies_router.get("/genres/{genre_id}", response_model=Genre)
 async def get_genre(genre_id: str):
     """Get a single genre by ID."""
     try:
@@ -89,7 +97,7 @@ async def get_genre(genre_id: str):
     return Genre(id=result["_id"], **result["_source"])
 
 
-@app.get("/genres/", response_model=List[Genre])
+@movies_router.get("/genres/", response_model=List[Genre])
 async def list_genres(
     query: Optional[str] = Query(None, description="Search by name or description"),
     sort: Optional[str] = Query(None, description="Sort by field, e.g. name or created"),
@@ -117,7 +125,7 @@ async def list_genres(
     return [Genre(id=hit["_id"], **hit["_source"]) for hit in resp["hits"]["hits"]]
 
 
-@app.get("/people/{person_id}", response_model=Person)
+@movies_router.get("/people/{person_id}", response_model=Person)
 async def get_person(person_id: str):
     """Get a single person by ID."""
     try:
@@ -127,7 +135,7 @@ async def get_person(person_id: str):
     return Person(id=result["_id"], **result["_source"])
 
 
-@app.get("/people/", response_model=List[Person])
+@movies_router.get("/people/", response_model=List[Person])
 async def list_people(
     query: Optional[str] = Query(None, description="Search by full name"),
     sort: Optional[str] = Query(None, description="Sort by field, e.g. full_name or created"),
@@ -155,8 +163,8 @@ async def list_people(
     return [Person(id=hit["_id"], **hit["_source"]) for hit in resp["hits"]["hits"]]
 
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Close Elasticsearch connection."""
-    await es.close()
+# @app.on_event("shutdown")
+# async def shutdown_event():
+#     """Close Elasticsearch connection."""
+#     await es.close()
 

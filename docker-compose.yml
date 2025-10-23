@@ -1,31 +1,17 @@
 services:
-  django_app:
+  fastapi_app:
     build:
-      context: ./movies_admin
-    expose:
-      - "8000"
-    env_file:
-      - .env
-    networks:
-      - app-network
-    volumes:
-      - django_static:/opt/app/static
-      - ./movies_admin:/opt/app
-    depends_on:
-      - theatre-db
-
-  nginx:
-    image: nginx:1.29.2
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./configs:/etc/nginx/conf.d:ro
-      - django_static:/usr/share/nginx/html/static:ro
-    depends_on:
-      - django_app
+      context: ./src/
     ports:
       - "8000:8000"
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
     networks:
       - app-network
+    volumes:
+      - ./src:/opt/app
+    depends_on:
+      - elasticsearch
 
   theatre-db:
     image: postgres:17.6-alpine
@@ -113,7 +99,6 @@ volumes:
   theatre_db_data:
   pgadmin-data:
   redis_data:
-  django_static:
   es_data:
 
 networks:
