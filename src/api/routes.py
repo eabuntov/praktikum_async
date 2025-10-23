@@ -1,14 +1,11 @@
 from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, Query, APIRouter
 from typing import Optional, List
-
-from models.models import FilmWork, Genre, Person
-
-movies_router = APIRouter(prefix="/movies", tags=["movies"])
 from src.api.caching import get_from_cache
-from src.main import app, INDEX_NAME, es, INDEX_GENRES, INDEX_PEOPLE
 from src.models.models import FilmWork, Genre, Person
 
+
+movies_router = APIRouter(prefix="/movies", tags=["movies"])
 # --- Elasticsearch connection ---
 es = AsyncElasticsearch(hosts=["http://localhost:9200"])
 INDEX_NAME = "movies"
