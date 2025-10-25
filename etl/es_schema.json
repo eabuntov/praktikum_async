@@ -4,8 +4,8 @@
     "analysis": {
       "filter": {
         "english_stop": {
-          "type":       "stop",
-          "stopwords":  "_english_"
+          "type": "stop",
+          "stopwords": "_english_"
         },
         "english_stemmer": {
           "type": "stemmer",
@@ -16,8 +16,8 @@
           "language": "possessive_english"
         },
         "russian_stop": {
-          "type":       "stop",
-          "stopwords":  "_russian_"
+          "type": "stop",
+          "stopwords": "_russian_"
         },
         "russian_stemmer": {
           "type": "stemmer",
@@ -45,47 +45,37 @@
       "id": {
         "type": "keyword"
       },
-      "imdb_rating": {
-        "type": "float"
-      },
-      "genres": {
-        "type": "keyword"
-      },
       "title": {
         "type": "text",
         "analyzer": "ru_en",
         "fields": {
-          "raw": { 
-            "type":  "keyword"
-          }
+          "raw": { "type": "keyword" }
         }
       },
       "description": {
         "type": "text",
         "analyzer": "ru_en"
       },
-      "directors_names": {
-        "type": "text",
-        "analyzer": "ru_en"
+      "imdb_rating": {
+        "type": "float"
       },
-      "actors_names": {
-        "type": "text",
-        "analyzer": "ru_en"
+      "creation_date": {
+        "type": "date"
       },
-      "writers_names": {
-        "type": "text",
-        "analyzer": "ru_en"
+      "type": {
+        "type": "keyword"
       },
-      "directors": {
+      "genres": {
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "id": {
-            "type": "keyword"
-          },
+          "id": { "type": "keyword" },
           "name": {
             "type": "text",
-            "analyzer": "ru_en"
+            "analyzer": "ru_en",
+            "fields": {
+              "raw": { "type": "keyword" }
+            }
           }
         }
       },
@@ -93,12 +83,13 @@
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "id": {
-            "type": "keyword"
-          },
+          "id": { "type": "keyword" },
           "name": {
             "type": "text",
-            "analyzer": "ru_en"
+            "analyzer": "ru_en",
+            "fields": {
+              "raw": { "type": "keyword" }
+            }
           }
         }
       },
@@ -106,15 +97,32 @@
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "id": {
-            "type": "keyword"
-          },
+          "id": { "type": "keyword" },
           "name": {
             "type": "text",
-            "analyzer": "ru_en"
+            "analyzer": "ru_en",
+            "fields": {
+              "raw": { "type": "keyword" }
+            }
           }
         }
-      }
+      },
+      "directors": {
+        "type": "nested",
+        "dynamic": "strict",
+        "properties": {
+          "id": { "type": "keyword" },
+          "name": {
+            "type": "text",
+            "analyzer": "ru_en",
+            "fields": {
+              "raw": { "type": "keyword" }
+            }
+          }
+        }
+      },
+      "created": { "type": "date" },
+      "modified": { "type": "date" }
     }
   }
 }
