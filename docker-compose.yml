@@ -1,0 +1,107 @@
+services:
+  fastapi_app:
+    build:
+      context: ./src/
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    networks:
+      - app-network
+    volumes:
+      - ./src:/opt/app
+    depends_on:
+      - elasticsearch
+
+  theatre-db:
+    image: postgres:17.6-alpine
+    container_name: theatre-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - theatre_db_data:/var/lib/postgresql/data
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    expose:
+      - "${DB_PORT}"
+    networks:
+      - app-network
+
+  redis:
+    image: redis:8.2.2-alpine
+    container_name: redis
+    env_file:
+      - .env
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  pgadmin:
+    image: 'docker.io/dpage/pgadmin4:9.8.0'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "e.a.buntov@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin/
+    networks:
+      - app-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.1.5
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false   # disable security for test mode
+    expose:
+      - "${ELK_PORT}"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - app-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.1.5
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+
+  etl_worker:
+    build:
+      context: ./etl
+    env_file:
+      - .env
+    networks:
+      - app-network
+    volumes:
+      - ./etl:/opt/app
+    depends_on:
+      - theatre-db
+      - elasticsearch
+      - redis
+
+volumes:
+  theatre_db_data:
+  pgadmin-data:
+  redis_data:
+  es_data:
+
+networks:
+  app-network:
+    driver: bridge
+
