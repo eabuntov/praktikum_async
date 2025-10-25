@@ -1,13 +1,18 @@
+import os
+
 from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, Query, APIRouter
 from typing import Optional, List
-from src.api.caching import get_from_cache
-from src.models.models import FilmWork, Genre, Person
+from api.caching import get_from_cache
+from models.models import FilmWork, Genre, Person
 
 
 movies_router = APIRouter(prefix="/movies", tags=["movies"])
 # --- Elasticsearch connection ---
-es = AsyncElasticsearch(hosts=["http://localhost:9200"])
+es = AsyncElasticsearch(hosts=[os.getenv("ELK_URL")],
+    verify_certs=False,   # disable SSL certificate verification
+    ssl_show_warn=False,  # suppress SSL warnings
+)
 INDEX_NAME = "movies"
 INDEX_GENRES = "genres"
 INDEX_PEOPLE = "persons"
@@ -25,7 +30,7 @@ async def get_movie(movie_id: str):
     except Exception:
         raise HTTPException(status_code=404, detail="Movie not found")
 
-    return FilmWork(id=result["_id"], **result["_source"])
+    return FilmWork(**result["_source"])
 
 
 @movies_router.get("/", response_model=List[FilmWork])
@@ -88,9 +93,8 @@ async def list_movies(
         body["sort"] = [{sort: {"order": sort_order}}]
 
     resp = await es.search(index=INDEX_NAME, body=body)
-
     results = [
-        FilmWork(id=hit["_id"], **hit["_source"])
+        FilmWork(**hit["_source"])
         for hit in resp["hits"]["hits"]
     ]
 
@@ -108,7 +112,7 @@ async def get_genre(genre_id: str):
         result = await es.get(index=INDEX_GENRES, id=genre_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Genre not found")
-    return Genre(id=result["_id"], **result["_source"])
+    return Genre(**result["_source"])
 
 
 @movies_router.get("/genres/", response_model=List[Genre])
@@ -140,10 +144,10 @@ async def list_genres(
         body["sort"] = [{sort: {"order": sort_order}}]
 
     resp = await es.search(index=INDEX_GENRES, body=body)
-    return [Genre(id=hit["_id"], **hit["_source"]) for hit in resp["hits"]["hits"]]
+    return [Genre(**hit["_source"]) for hit in resp["hits"]["hits"]]
 
 
-@movies_router.get("/people/{person_id}", response_model=Person)
+@movies_router.get("/persons/{person_id}", response_model=Person)
 async def get_person(person_id: str):
     """Get a single person by ID."""
     cache_key = f"person:{person_id}"
@@ -154,10 +158,10 @@ async def get_person(person_id: str):
         result = await es.get(index=INDEX_PEOPLE, id=person_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Person not found")
-    return Person(id=result["_id"], **result["_source"])
+    return Person(**result["_source"])
 
 
-@movies_router.get("/people/", response_model=List[Person])
+@movies_router.get("/persons/", response_model=List[Person])
 async def list_people(
     query: Optional[str] = Query(None, description="Search by full name"),
     sort: Optional[str] = Query(None, description="Sort by field, e.g. full_name or created"),
@@ -186,11 +190,10 @@ async def list_people(
         body["sort"] = [{sort: {"order": sort_order}}]
 
     resp = await es.search(index=INDEX_PEOPLE, body=body)
-    return [Person(id=hit["_id"], **hit["_source"]) for hit in resp["hits"]["hits"]]
+    return [Person(**hit["_source"]) for hit in resp["hits"]["hits"]]
 
 
-# @app.on_event("shutdown")
-# async def shutdown_event():
-#     """Close Elasticsearch connection."""
-#     await es.close()
+async def shutdown_elastic():
+    """Gracefully close Elasticsearch connection."""
+    await es.close()
 

@@ -45,37 +45,57 @@
       "id": {
         "type": "keyword"
       },
+      "rating": {
+        "type": "float"
+      },
+      "type": {
+        "type": "text",
+        "analyzer": "ru_en"
+      },
+      "genres": {
+        "type": "text",
+        "analyzer": "ru_en",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
       "title": {
         "type": "text",
         "analyzer": "ru_en",
         "fields": {
-          "raw": { "type": "keyword" }
+          "raw": {
+            "type": "keyword"
+          }
         }
       },
       "description": {
         "type": "text",
         "analyzer": "ru_en"
       },
-      "imdb_rating": {
-        "type": "float"
+      "directors_names": {
+        "type": "text",
+        "analyzer": "ru_en"
       },
-      "creation_date": {
-        "type": "date"
+      "actors_names": {
+        "type": "text",
+        "analyzer": "ru_en"
       },
-      "type": {
-        "type": "keyword"
+      "writers_names": {
+        "type": "text",
+        "analyzer": "ru_en"
       },
-      "genres": {
+      "directors": {
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "id": { "type": "keyword" },
+          "id": {
+            "type": "keyword"
+          },
           "name": {
             "type": "text",
-            "analyzer": "ru_en",
-            "fields": {
-              "raw": { "type": "keyword" }
-            }
+            "analyzer": "ru_en"
           }
         }
       },
@@ -83,13 +103,12 @@
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "id": { "type": "keyword" },
+          "id": {
+            "type": "keyword"
+          },
           "name": {
             "type": "text",
-            "analyzer": "ru_en",
-            "fields": {
-              "raw": { "type": "keyword" }
-            }
+            "analyzer": "ru_en"
           }
         }
       },
@@ -97,32 +116,21 @@
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "id": { "type": "keyword" },
+          "id": {
+            "type": "keyword"
+          },
           "name": {
             "type": "text",
-            "analyzer": "ru_en",
-            "fields": {
-              "raw": { "type": "keyword" }
-            }
+            "analyzer": "ru_en"
           }
         }
       },
-      "directors": {
-        "type": "nested",
-        "dynamic": "strict",
-        "properties": {
-          "id": { "type": "keyword" },
-          "name": {
-            "type": "text",
-            "analyzer": "ru_en",
-            "fields": {
-              "raw": { "type": "keyword" }
-            }
-          }
-        }
+      "created": {
+        "type": "date"
       },
-      "created": { "type": "date" },
-      "modified": { "type": "date" }
+      "modified": {
+        "type": "date"
+      }
     }
   }
 }

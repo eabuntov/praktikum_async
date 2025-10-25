@@ -1,7 +1,15 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from api import routes
+from api.routes import movies_router, shutdown_elastic
 
-# --- FastAPI setup ---
-app = FastAPI(title="Movies API with Elasticsearch")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup event handler
+    yield
+    # Shutdown event handler
+    await shutdown_elastic()
 
-app.include_router(routes.movies_router)
+app = FastAPI(title="Movies API with Elasticsearch", lifespan=lifespan)
+
+app.include_router(movies_router)

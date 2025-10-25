@@ -28,20 +28,17 @@ class Transformer:
 
         return {
             "id": str(row["id"]),
-            "imdb_rating": float(row["imdb_rating"]) if row.get("imdb_rating") else None,
-            "genres": [{"id": g["id"], "name": g["name"]} for g in genres],
-            "title": row.get("title"),
-            "description": row.get("description"),
-            "creation_date": row.get("creation_date"),
-            "type": row.get("type"),
+            "rating": float(row["rating"]) if row["rating"] else None,
+            "genres": row["genres"] or [],
+            "title": row["title"],
+            "type": row["type"],
+            "description": row["description"],
             "directors_names": [p["name"] for p in grouped["directors"]],
             "actors_names": [p["name"] for p in grouped["actors"]],
             "writers_names": [p["name"] for p in grouped["writers"]],
             "directors": grouped["directors"],
             "actors": grouped["actors"],
             "writers": grouped["writers"],
-            "created": row.get("created"),
-            "modified": row.get("modified"),
         }
 
     def transform_genre(self, row: dict[str, Any]) -> dict[str, Any]:

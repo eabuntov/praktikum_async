@@ -4,8 +4,8 @@ services:
       context: ./src/
     ports:
       - "8000:8000"
-    environment:
-      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+    env_file:
+      - .env
     networks:
       - app-network
     volumes:
@@ -62,8 +62,8 @@ services:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - xpack.security.enabled=false   # disable security for test mode
-    ports:
-      - "9200:9200"
+    expose:
+      - "${ELK_PORT}"
     volumes:
       - es_data:/usr/share/elasticsearch/data
     networks:

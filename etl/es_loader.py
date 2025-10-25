@@ -6,7 +6,7 @@ from typing import Any
 import requests
 from elasticsearch import Elasticsearch, helpers
 
-from apply_es_schema import apply_elastic_schema
+from apply_es_schemas import apply_elastic_schemas
 
 
 class ElasticLoader:
@@ -26,19 +26,18 @@ class ElasticLoader:
                 pass
             time.sleep(2)
 
-    def __init__(self, es_host: str, index: str):
+    def __init__(self, es_host: str):
         ElasticLoader.wait_for_elasticsearch()
         self.es = Elasticsearch([es_host])
-        self.index = index
-        apply_elastic_schema(self.index)
+        apply_elastic_schemas()
 
-    def load_bulk(self, docs: list[dict[str, Any]]):
+    def load_bulk(self, docs: list[dict[str, Any]], index: str):
         """Загружает (вставляет или заменяет) документы в Elasticsearch."""
         logging.info("Загрузка данных в Elasticsearch...")
         actions = [
             {
                 "_op_type": "index",  # replaces if exists
-                "_index": self.index,
+                "_index": index,
                 "_id": doc["id"],
                 "_source": doc,
             }

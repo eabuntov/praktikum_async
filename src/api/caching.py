@@ -1,7 +1,7 @@
 import json
 import os
 
-import aioredis
+import redis.asyncio as aioredis
 
 CACHE_TTL = 300
 REDIS_PORT = os.getenv("REDIS_PORT")

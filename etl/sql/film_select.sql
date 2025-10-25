@@ -1,7 +1,7 @@
 SELECT  fw.id,
         fw.title,
         fw.description,
-        fw.rating AS imdb_rating,
+        fw.rating,
         fw.type,
         array_agg(DISTINCT g.name) AS genres,
         json_agg(DISTINCT jsonb_build_object('id', p.id, 'name', p.full_name, 'role', pfw.role))
