@@ -32,7 +32,7 @@ def setup_logging(log_level: str = logging.INFO) -> None:
             },
             "file": {
                 "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(log_dir / "etl_worker.log"),
+                "filename": str("/opt/app/app.log"),
                 "maxBytes": 5 * 1024 * 1024,  # 5 MB
                 "backupCount": 3,
                 "encoding": "utf-8",
