@@ -3,3 +3,4 @@ pytest
 psycopg2-binary==2.9.11
 elasticsearch==9.1.1
 aioredis==2.0.1
+pydantic-settings==2.11.0

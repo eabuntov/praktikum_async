@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from typing import Any
 
@@ -7,6 +6,7 @@ import requests
 from elasticsearch import Elasticsearch, helpers
 
 from apply_es_schemas import apply_elastic_schemas
+from config.config import settings
 
 
 class ElasticLoader:
@@ -17,7 +17,7 @@ class ElasticLoader:
         logging.info("⏳ Ждем загрузки Elasticsearch..")
         while True:
             try:
-                r = requests.get(f"{os.getenv("ELK_URL")}/_cluster/health",
+                r = requests.get(f"{settings.elk_url}/_cluster/health",
                                  params={"wait_for_status": "yellow", "timeout": "1s"})
                 if r.ok and r.json().get("status") in ("yellow", "green"):
                     logging.info("✅ Elasticsearch готов.")

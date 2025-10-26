@@ -1,15 +1,14 @@
-import os
-
 from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, Query, APIRouter
 from typing import Optional, List
 from api.caching import get_from_cache
 from models.models import FilmWork, Genre, Person
 
+from config.config import settings
 
 movies_router = APIRouter(prefix="/movies", tags=["movies"])
 # --- Elasticsearch connection ---
-es = AsyncElasticsearch(hosts=[os.getenv("ELK_URL")],
+es = AsyncElasticsearch(hosts=[settings.elk_url],
     verify_certs=False,   # disable SSL certificate verification
     ssl_show_warn=False,  # suppress SSL warnings
 )

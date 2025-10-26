@@ -10,8 +10,15 @@ services:
       - app-network
     volumes:
       - ./src:/opt/app
+      - ./config:/opt/config
     depends_on:
       - elasticsearch
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"     # rotate when a log reaches 10MB
+        max-file: "3"       # keep last 3 files
+        tag: "fastapi_app"
 
   theatre-db:
     image: postgres:17.6-alpine
@@ -29,6 +36,12 @@ services:
       - "${DB_PORT}"
     networks:
       - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "theatre-db"
 
   redis:
     image: redis:8.2.2-alpine
@@ -42,6 +55,12 @@ services:
       - redis_data:/data
     networks:
       - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "redis"
 
   pgadmin:
     image: 'docker.io/dpage/pgadmin4:9.8.0'
@@ -54,6 +73,12 @@ services:
       - pgadmin-data:/var/lib/pgadmin/
     networks:
       - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "pgadmin"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.1.5
@@ -68,6 +93,12 @@ services:
       - es_data:/usr/share/elasticsearch/data
     networks:
       - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+        tag: "elasticsearch"
 
   kibana:
     image: docker.elastic.co/kibana/kibana:9.1.5
@@ -80,6 +111,12 @@ services:
       - elasticsearch
     networks:
       - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "kibana"
 
   etl_worker:
     build:
@@ -90,10 +127,17 @@ services:
       - app-network
     volumes:
       - ./etl:/opt/app
+      - ./config:/opt/config
     depends_on:
       - theatre-db
       - elasticsearch
       - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "etl_worker"
 
 volumes:
   theatre_db_data:
@@ -104,4 +148,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-

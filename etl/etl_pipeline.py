@@ -1,6 +1,7 @@
 import logging
-import os
-
+import sys
+sys.path.append("/opt")
+from config.config import settings
 from es_loader import ElasticLoader
 from state_storage import RedisStorage
 from pg_listener import PostgresListener
@@ -70,18 +71,18 @@ class ETLPipeline:
 if __name__ == "__main__":
     # Entry point
     postgres_dsl = {
-        'dbname': os.environ.get('DB_NAME'),
-        'user': os.environ.get('DB_USER'),
-        'password': os.environ.get('DB_PASSWORD'),
-        'host': os.environ.get('DB_HOST'),
-        'port': os.environ.get('DB_PORT'),
+        'dbname': settings.db_name,
+        'user': settings.db_user,
+        'password': settings.db_password,
+        'host': settings.db_host,
+        'port': settings.db_port,
     }
 
     extractor = PostgresExtractor(postgres_dsl)
     transformer = Transformer()
-    loader = ElasticLoader(os.environ.get("ELK_URL"))
+    loader = ElasticLoader(settings.elk_url)
     pipeline = ETLPipeline(extractor, transformer, loader)
-    pipeline.run(batch_size=int(os.environ.get("BATCH_SIZE", "100")))
+    pipeline.run(batch_size=int(settings.batch_size))
 
     # Start listening for DB changes
     listener = PostgresListener(postgres_dsl)

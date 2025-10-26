@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
-
+import sys
+sys.path.append("/opt")
 from fastapi import FastAPI
 from api.routes import movies_router, shutdown_elastic
 
