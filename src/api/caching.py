@@ -1,12 +1,12 @@
 import json
-import os
 
 import redis.asyncio as aioredis
 
-CACHE_TTL = 300
-REDIS_PORT = os.getenv("REDIS_PORT")
+from config.config import settings
 
-redis = aioredis.from_url(f"redis://redis:{REDIS_PORT}", decode_responses=True)
+CACHE_TTL = 300
+
+redis = aioredis.from_url(f"redis://redis:{settings.redis_port}", decode_responses=True)
 
 async def get_from_cache(key: str):
     data = await redis.get(key)

@@ -1,9 +1,10 @@
 import json
-import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from redis import Redis
 from typing import Any, Optional
+
+from config.config import settings
 
 
 class BaseStorage(ABC):
@@ -25,8 +26,8 @@ class RedisStorage(BaseStorage):
 
     def __init__(self, redis_adapter: Redis = None, namespace: str = "etl_state:"):
         self.redis_adapter = redis_adapter or Redis(
-            host=os.getenv("REDIS_HOST", "redis"),
-            port=int(os.getenv("REDIS_PORT", "6739")),
+            host=settings.redis_host,
+            port=int(settings.redis_port),
             db=0,
             decode_responses=True,
         )

@@ -1,7 +1,8 @@
-import os
 import json
 import requests
 import logging
+
+from config.config import settings
 
 
 def apply_elastic_schemas():
@@ -9,8 +10,6 @@ def apply_elastic_schemas():
     Применяем json-схем: movies, genres, и persons.
     """
 
-    elk_url = os.getenv("ELK_URL")
-    schema_path = os.getenv("SCHEMA_FILE")
     indices = ["movies", "genres", "persons"]
 
     # Load schema
@@ -20,10 +19,10 @@ def apply_elastic_schemas():
             with open(f"es_schemas/{index_name}_schema.json", "r", encoding="utf-8") as f:
                 schema_json = json.load(f)
         except FileNotFoundError as e:
-            logging.error(f"❌ Failed to load schema file '{schema_path}': {e}")
+            logging.error(f"❌ Failed to load schema file '{settings.schema_file}': {e}")
             raise
         try:
-            resp = requests.put(f"{elk_url}/{index_name}", json=schema_json)
+            resp = requests.put(f"{settings.elk_url}/{index_name}", json=schema_json)
 
             if resp.ok:
                 logging.info(f"✅ Index '{index_name}' created successfully.")

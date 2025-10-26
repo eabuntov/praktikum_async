@@ -10,6 +10,7 @@ services:
       - app-network
     volumes:
       - ./src:/opt/app
+      - ./config:/opt/config
     depends_on:
       - elasticsearch
 
@@ -90,6 +91,7 @@ services:
       - app-network
     volumes:
       - ./etl:/opt/app
+      - ./config:/opt/config
     depends_on:
       - theatre-db
       - elasticsearch
