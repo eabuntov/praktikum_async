@@ -1,8 +1,59 @@
+import logging
+import logging.config
+import sys
+from pathlib import Path
+from typing import Any
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def setup_logging(log_level: str = logging.INFO) -> None:
+    """Configure logging for the ETL worker."""
+    log_dir = Path("/opt/app/logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    logging_config = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {
+                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+            },
+            "detailed": {
+                "format": "%(asctime)s [%(levelname)s] %(name)s (%(filename)s:%(lineno)d): %(message)s"
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "stream": sys.stdout,
+                "formatter": "standard",
+            },
+            "file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": str(log_dir / "etl_worker.log"),
+                "maxBytes": 5 * 1024 * 1024,  # 5 MB
+                "backupCount": 3,
+                "encoding": "utf-8",
+                "formatter": "detailed",
+            },
+        },
+        "root": {
+            "handlers": ["console", "file"],  # both console + file
+            "level": log_level,
+        },
+    }
+
+    logging.config.dictConfig(logging_config)
+    logging.getLogger(__name__).info("Logging initialized")
+
 class Settings(BaseSettings):
+
+    def __init__(self, **values: Any):
+        super().__init__(**values)
+        setup_logging()
+
     model_config = SettingsConfigDict(env_file='../.env', env_file_encoding='utf-8')
 
     # Database settings
