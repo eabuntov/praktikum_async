@@ -1,9 +1,6 @@
 from typing import Generator, Any
-
 from sqlparse.utils import offset
-
 from db_routines import get_db_cursor
-from etl_transformer import Transformer
 
 
 class PostgresExtractor:
@@ -11,7 +8,6 @@ class PostgresExtractor:
 
     def __init__(self, dsl: dict):
         self.dsn = dsl
-        self.transformer = Transformer()
 
     def fetch_movies(self, last_time: str,
                      last_ids: list, batch_size: int) -> Generator[list[dict[str, Any]], None, None]:

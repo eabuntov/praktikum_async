@@ -5,7 +5,7 @@ from config.config import settings
 from es_loader import ElasticLoader
 from state_storage import RedisStorage
 from pg_listener import PostgresListener
-from etl_transformer import Transformer
+from etl_transformer import TransformerFactory
 from pg_extractor import PostgresExtractor
 
 logging.basicConfig(level=logging.INFO)
@@ -14,9 +14,8 @@ logging.basicConfig(level=logging.INFO)
 class ETLPipeline:
     """ETL pipeline implementation for movies, genres, and people."""
 
-    def __init__(self, extractor: PostgresExtractor, transformer: Transformer, loader: ElasticLoader):
+    def __init__(self, extractor: PostgresExtractor, loader: ElasticLoader):
         self.extractor = extractor
-        self.transformer = transformer
         self.loader = loader
         self.state = RedisStorage()
 
@@ -31,9 +30,9 @@ class ETLPipeline:
         logging.info("Starting movie ETL pipeline...")
         time = self.state.retrieve_state("movies_time")
         ids = self.state.retrieve_state("movies_ids")
-
+        transformer = TransformerFactory.get("movie")
         for rows in self.extractor.fetch_movies(time, ids, batch_size=batch_size):
-            transformed = [self.transformer.transform_movie(r) for r in rows]
+            transformed = [transformer.transform(r) for r in rows]
             self.loader.load_bulk(transformed, index="movies")
             self._update_state("movies", rows, transformed)
 
@@ -42,9 +41,9 @@ class ETLPipeline:
         logging.info("Starting genre ETL pipeline...")
         time = self.state.retrieve_state("genres_time")
         ids = self.state.retrieve_state("genres_ids")
-
+        transformer = TransformerFactory.get("genre")
         for rows in self.extractor.fetch_genres(time, ids, batch_size=batch_size):
-            transformed = [self.transformer.transform_genre(r) for r in rows]
+            transformed = [transformer.transform(r) for r in rows]
             self.loader.load_bulk(transformed, index="genres")
             self._update_state("genres", rows, transformed)
 
@@ -53,9 +52,9 @@ class ETLPipeline:
         logging.info("Starting people ETL pipeline...")
         time = self.state.retrieve_state("people_time")
         ids = self.state.retrieve_state("people_ids")
-
+        transformer = TransformerFactory.get("person")
         for rows in self.extractor.fetch_people(time, ids, batch_size=batch_size):
-            transformed = [self.transformer.transform_person(r) for r in rows]
+            transformed = [transformer.transform(r) for r in rows]
             self.loader.load_bulk(transformed, index="persons")
             self._update_state("persons", rows, transformed)
 
@@ -79,9 +78,8 @@ if __name__ == "__main__":
     }
 
     extractor = PostgresExtractor(postgres_dsl)
-    transformer = Transformer()
     loader = ElasticLoader()
-    pipeline = ETLPipeline(extractor, transformer, loader)
+    pipeline = ETLPipeline(extractor, loader)
     pipeline.run(batch_size=int(settings.batch_size))
 
     # Start listening for DB changes
