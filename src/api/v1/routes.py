@@ -16,7 +16,6 @@ INDEX_NAME = "movies"
 INDEX_GENRES = "genres"
 INDEX_PEOPLE = "persons"
 
-
 @movies_router.get("/{movie_id}", response_model=FilmWork)
 async def get_movie(movie_id: str):
     """Get a single movie by ID."""

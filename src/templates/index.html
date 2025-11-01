@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Practix</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #eef3f6; margin: 0; padding: 0; }
+        header { background: white; display: flex; align-items: center; padding: 1rem 2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header h1 { margin: 0; margin-right: 2rem; font-size: 1.5rem; }
+        nav a { margin-right: 1.5rem; text-decoration: none; color: black; font-weight: 500; }
+        .section { margin: 2rem; }
+        .section h2 { margin-bottom: 1rem; }
+        .movies { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .movie-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            width: 200px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>PRACTIX</h1>
+    <nav>
+        <a href="#">Home</a>
+        <a href="#">TV Shows</a>
+        <a href="#">Movies</a>
+        <a href="#">Latest</a>
+        <a href="#">My List</a>
+    </nav>
+</header>
+
+{% for section, titles in movies.items() %}
+<div class="section">
+    <h2>{{ section }}</h2>
+    <div class="movies">
+        {% for title in titles %}
+        <div class="movie-card">{{ title }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+</body>
+</html>
