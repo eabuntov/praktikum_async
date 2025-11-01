@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     extractor = PostgresExtractor(postgres_dsl)
     transformer = Transformer()
-    loader = ElasticLoader(settings.elk_url)
+    loader = ElasticLoader()
     pipeline = ETLPipeline(extractor, transformer, loader)
     pipeline.run(batch_size=int(settings.batch_size))
 
