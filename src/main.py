@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 import sys
 sys.path.append("/opt")
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from api.v1.routes import movies_router, shutdown_elastic
 
@@ -25,6 +25,14 @@ async def home(request: Request):
     """Рендеринг домашней страницы"""
     movies = await get_movies()
     return templates.TemplateResponse("index.html", {"request": request, "movies": movies})
+
+@app.get("/health", response_class=JSONResponse)
+async def healthcheck():
+    """
+    Простой healthcheck.
+    Returns 200 OK если приложение живо.
+    """
+    return {"status": "ok"}
 
 
 async def get_movies():
