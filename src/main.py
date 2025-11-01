@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 import sys
 sys.path.append("/opt")
 from fastapi import FastAPI
-from api.routes import movies_router, shutdown_elastic
+from api.v1.routes import movies_router, shutdown_elastic
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

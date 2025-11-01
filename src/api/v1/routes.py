@@ -1,7 +1,7 @@
 from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, Query, APIRouter
 from typing import Optional, List
-from api.caching import get_from_cache
+from api.v1.caching import get_from_cache
 from models.models import FilmWork, Genre, Person
 
 from config.config import settings
