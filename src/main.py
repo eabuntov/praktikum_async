@@ -1,30 +1,21 @@
-from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi.templating import Jinja2Templates
 import sys
 sys.path.append("/opt")
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from api.v1.routes import movies_router, shutdown_elastic
+from api.v1.home_router import home_router
+from api.v1.movies_router import movies_router
+from api.v1.persons_router import persons_router
+from api.v1.genres_router import genres_router
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup event handler
-    yield
-    # Shutdown event handler
-    await shutdown_elastic()
+app = FastAPI(title="Movies API with Elasticsearch")
 
-app = FastAPI(title="Movies API with Elasticsearch", lifespan=lifespan)
-
+app.include_router(home_router)
 app.include_router(movies_router)
+app.include_router(genres_router)
+app.include_router(persons_router)
 
 templates = Jinja2Templates(directory="templates")
-
-
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    """Рендеринг домашней страницы"""
-    movies = await get_movies()
-    return templates.TemplateResponse("index.html", {"request": request, "movies": movies})
 
 @app.get("/health", response_class=JSONResponse)
 async def healthcheck():
@@ -33,12 +24,3 @@ async def healthcheck():
     Returns 200 OK если приложение живо.
     """
     return {"status": "ok"}
-
-
-async def get_movies():
-    """Мок-фильмы для домашней страницы"""
-    return {
-        "Featured": ["Psycho", "Pride & Prejudice", "Catch Me If You Can", "Being John Malkovich"],
-        "Popular": ["Fullmetal Alchemist: Brotherhood", "Breaking Bad", "Maniac", "Black Mirror"],
-        "Comedies": ["Ocean’s Eleven", "Ocean’s Thirteen", "Back to the Future", "The Big Lebowski"],
-    }
