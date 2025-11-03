@@ -80,23 +80,23 @@ services:
       retries: 5
       start_period: 5s
 
-  pgadmin:
-    image: 'docker.io/dpage/pgadmin4:9.8.0'
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "e.a.buntov@gmail.com"
-      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "8080:80"
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin/
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-        max-file: "3"
-        tag: "pgadmin"
+#  pgadmin:
+#    image: 'docker.io/dpage/pgadmin4:9.8.0'
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: "e.a.buntov@gmail.com"
+#      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
+#    ports:
+#      - "8080:80"
+#    volumes:
+#      - pgadmin-data:/var/lib/pgadmin/
+#    networks:
+#      - app-network
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "5m"
+#        max-file: "3"
+#        tag: "pgadmin"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.1.5
@@ -124,23 +124,23 @@ services:
       retries: 5
       start_period: 20s
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:9.1.5
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        tag: "kibana"
+#  kibana:
+#    image: docker.elastic.co/kibana/kibana:9.1.5
+#    container_name: kibana
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+#    ports:
+#      - "5601:5601"
+#    depends_on:
+#      - elasticsearch
+#    networks:
+#      - app-network
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "10m"
+#        max-file: "3"
+#        tag: "kibana"
 
   etl_worker:
     build:
@@ -165,6 +165,18 @@ services:
         max-size: "10m"
         max-file: "3"
         tag: "etl_worker"
+
+  test:
+    build:
+      context: ./tests
+    depends_on:
+      fastapi_app:
+        condition: service_healthy
+    command: [ "pytest", "-v", "--maxfail=1", "--disable-warnings", "-q" ]
+    volumes:
+      - ./tests:/opt/app/tests
+    networks:
+      - app-network
 
 volumes:
   theatre_db_data:
