@@ -21,20 +21,17 @@ class PersonService:
 
     async def list_people(
         self,
-        query: Optional[str],
         sort: Optional[str],
         sort_order: str,
         limit: int,
         offset: int
     ) -> list[Person]:
-        cache_key = f"people:list:{query}:{sort}:{sort_order}:{limit}:{offset}"
+        cache_key = f"people:list:{sort}:{sort_order}:{limit}:{offset}"
         cached = await get_from_cache(cache_key)
         if cached:
             return [Person(**doc) for doc in cached]
 
         must = []
-        if query:
-            must.append({"multi_match": {"query": query, "fields": ["full_name"]}})
 
         body = {
             "query": {"bool": {"must": must or [{"match_all": {}}]}},

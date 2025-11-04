@@ -5,9 +5,9 @@ from typing import List, Optional
 from config.config import settings
 from models.models import FilmWork
 from repositories.elastic_repository import ElasticRepository
-from services.movie_service import MovieService
+from services.film_service import FilmService
 
-movies_router = APIRouter(prefix="/movies", tags=["movies"])
+films_router = APIRouter(prefix="/films", tags=["films"])
 
 async def get_elastic_client() -> AsyncElasticsearch:
     """Dependency that provides a single Elasticsearch client."""
@@ -17,21 +17,20 @@ async def get_elastic_client() -> AsyncElasticsearch:
     finally:
         await client.close()
 
-def get_movie_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> MovieService:
+def get_film_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> FilmService:
     repo = ElasticRepository(es, index="movies", model=FilmWork)
-    return MovieService(repo)
+    return FilmService(repo)
 
-@movies_router.get("/{movie_id}", response_model=FilmWork)
-async def get_movie(movie_id: str, service: MovieService = Depends(get_movie_service)):
-    """Get a single movie by ID."""
+@films_router.get("/{film_id}", response_model=FilmWork)
+async def get_film(film_id: str, service: FilmService = Depends(get_film_service)):
+    """Get a single film by ID."""
     try:
-        return await service.get_movie(movie_id)
+        return await service.get_film(film_id)
     except NotFoundError:
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise HTTPException(status_code=404, detail="film not found")
 
-@movies_router.get("/", response_model=List[FilmWork])
-async def list_movies(
-    query: Optional[str] = Query(None),
+@films_router.get("/", response_model=List[FilmWork])
+async def list_films(
     sort: Optional[str] = Query(None),
     sort_order: str = Query("desc", regex="^(asc|desc)$"),
     min_rating: Optional[float] = Query(None),
@@ -39,7 +38,7 @@ async def list_movies(
     type: Optional[str] = Query(None, alias="type"),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    service: MovieService = Depends(get_movie_service),
+    service: FilmService = Depends(get_film_service),
 ):
-    """Search, filter, and sort movies."""
-    return await service.list_movies(query, sort, sort_order, min_rating, max_rating, type, limit, offset)
+
+    return await service.list_films(sort, sort_order, min_rating, max_rating, type, limit, offset)

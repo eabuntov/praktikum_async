@@ -30,7 +30,6 @@ async def get_genre(genre_id: str, service: GenreService = Depends(get_genre_ser
 
 @genres_router.get("/", response_model=List[Genre])
 async def list_genres(
-    query: Optional[str] = Query(None),
     sort: Optional[str] = Query(None),
     sort_order: str = Query("asc", regex="^(asc|desc)$"),
     limit: int = Query(10, ge=1, le=100),
@@ -38,4 +37,4 @@ async def list_genres(
     service: GenreService = Depends(get_genre_service),
 ):
     """List or search genres."""
-    return await service.list_genres(query, sort, sort_order, limit, offset)
+    return await service.list_genres(sort, sort_order, limit, offset)

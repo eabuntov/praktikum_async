@@ -4,16 +4,18 @@ from fastapi.templating import Jinja2Templates
 import sys
 sys.path.append("/opt")
 from api.v1.home_router import home_router
-from api.v1.movies_router import movies_router
+from api.v1.films_router import films_router
 from api.v1.persons_router import persons_router
 from api.v1.genres_router import genres_router
+from api.v1.search_router import films_search_router
 
-app = FastAPI(title="Movies API with Elasticsearch")
+app = FastAPI(title="films API with Elasticsearch")
 
 app.include_router(home_router)
-app.include_router(movies_router)
+app.include_router(films_router)
 app.include_router(genres_router)
 app.include_router(persons_router)
+app.include_router(films_search_router)
 
 templates = Jinja2Templates(directory="templates")
 

@@ -21,22 +21,17 @@ class GenreService:
 
     async def list_genres(
         self,
-        query: Optional[str],
         sort: Optional[str],
         sort_order: str,
         limit: int,
         offset: int
     ) -> list[Genre]:
-        cache_key = f"genres:list:{query}:{sort}:{sort_order}:{limit}:{offset}"
+        cache_key = f"genres:list:{sort}:{sort_order}:{limit}:{offset}"
         cached = await get_from_cache(cache_key)
         if cached:
             return [Genre(**doc) for doc in cached]
 
         must = []
-        if query:
-            must.append({
-                "multi_match": {"query": query, "fields": ["name^2", "description"]}
-            })
 
         body = {
             "query": {"bool": {"must": must or [{"match_all": {}}]}},

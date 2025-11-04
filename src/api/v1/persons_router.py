@@ -30,7 +30,6 @@ async def get_person(person_id: str, service: PersonService = Depends(get_person
 
 @persons_router.get("/", response_model=List[Person])
 async def list_people(
-    query: Optional[str] = Query(None),
     sort: Optional[str] = Query(None),
     sort_order: str = Query("asc", regex="^(asc|desc)$"),
     limit: int = Query(10, ge=1, le=100),
@@ -38,4 +37,4 @@ async def list_people(
     service: PersonService = Depends(get_person_service),
 ):
     """List or search people."""
-    return await service.list_people(query, sort, sort_order, limit, offset)
+    return await service.list_people(sort, sort_order, limit, offset)
