@@ -1,7 +1,16 @@
 from elasticsearch import AsyncElasticsearch
 from typing import Any, TypeVar
 
+from config.config import settings
+
 T = TypeVar("T")
+
+async def get_elastic_client() -> AsyncElasticsearch:
+    client = AsyncElasticsearch(hosts=[settings.elk_url], verify_certs=False)
+    try:
+        yield client
+    finally:
+        await client.close()
 
 
 class ElasticRepository:
