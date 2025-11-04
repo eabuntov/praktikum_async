@@ -1,21 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from typing import List, Optional
-
-from config.config import settings
 from models.models import FilmWork
-from repositories.elastic_repository import ElasticRepository
+from repositories.elastic_repository import ElasticRepository, get_elastic_client
 from services.film_service import FilmService
 
 films_router = APIRouter(prefix="/films", tags=["films"])
-
-async def get_elastic_client() -> AsyncElasticsearch:
-    """Dependency that provides a single Elasticsearch client."""
-    client = AsyncElasticsearch(hosts=[settings.elk_url], verify_certs=False)
-    try:
-        yield client
-    finally:
-        await client.close()
 
 def get_film_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> FilmService:
     repo = ElasticRepository(es, index="movies", model=FilmWork)
