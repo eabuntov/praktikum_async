@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -18,6 +19,16 @@ app.include_router(persons_router)
 app.include_router(films_search_router)
 
 templates = Jinja2Templates(directory="templates")
+
+with open("api/v1/openapi.json", "r", encoding="utf-8") as f:
+    custom_openapi_schema = json.load(f)
+
+# Override FastAPI's openapi generation function
+def custom_openapi():
+    return custom_openapi_schema
+
+# Assign it to the app
+app.openapi = custom_openapi
 
 @app.get("/health", response_class=JSONResponse)
 async def healthcheck():
