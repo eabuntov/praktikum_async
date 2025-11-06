@@ -1,7 +1,23 @@
-from elasticsearch import AsyncElasticsearch
-from typing import Any, TypeVar
+import backoff
+from elasticsearch import AsyncElasticsearch, ConnectionError
+from typing import Any, TypeVar, AsyncGenerator
+from config.config import settings
 
 T = TypeVar("T")
+
+@backoff.on_exception(
+    backoff.expo,                      # exponential backoff (1s, 2s, 4s, 8s, …)
+    ConnectionError,                 # retry on ES connection errors
+    max_time=60,                       # stop retrying after 60 seconds
+    max_tries=5,                       # or after 5 attempts, whichever comes first
+    jitter=backoff.full_jitter         # randomize delay to reduce thundering herd
+)
+async def get_elastic_client() -> AsyncGenerator[AsyncElasticsearch, Any]:
+    client = AsyncElasticsearch(hosts=[settings.elk_url], verify_certs=False)
+    try:
+        yield client
+    finally:
+        await client.close()
 
 
 class ElasticRepository:
