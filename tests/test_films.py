@@ -46,12 +46,3 @@ async def test_get_film_by_id(api_base_url):
             assert film["id"] == film_id
             assert "title" in film
             assert "type" in film
-
-
-# async def test_get_film_invalid_id_returns_422(api_base_url):
-#     """Invalid UUID should trigger validation error (422)."""
-#     async with aiohttp.ClientSession() as session:
-#         async with session.get(f"{api_base_url}/films/not-a-valid-id") as resp:
-#             assert resp.status == 422
-#             error = await resp.json()
-#             assert "detail" in error
