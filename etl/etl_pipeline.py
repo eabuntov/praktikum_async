@@ -4,72 +4,48 @@ sys.path.append("/opt")
 from config.config import settings
 from es_loader import ElasticLoader
 from state_storage import RedisStorage
-from pg_listener import PostgresListener
-from etl_transformer import Transformer
 from pg_extractor import PostgresExtractor
+from pg_listener import PostgresListener
+from etl_transformer import TransformerFactory
 
-logging.basicConfig(level=logging.INFO)
+
+class EntityETL:
+    def __init__(self, name: str, extractor, fetch_fn, transformer, loader, state, index: str):
+        self.name = name
+        self.extractor = extractor
+        self.fetch_fn = fetch_fn
+        self.transformer = transformer
+        self.loader = loader
+        self.state = state
+        self.index = index
+
+    def run(self, batch_size: int):
+        logging.info(f"Starting {self.name} ETL...")
+        time = self.state.retrieve_state(f"{self.name}_time")
+        ids = self.state.retrieve_state(f"{self.name}_ids")
+        for rows in self.fetch_fn(time, ids, batch_size=batch_size):
+            transformed = [self.transformer.transform(r) for r in rows]
+            self.loader.load_bulk(transformed, index=self.index)
+            if rows:
+                self.state.save_state(f"{self.name}_time", rows[-1].get("updated") or rows[-1].get("created"))
+                self.state.save_state(f"{self.name}_ids", [r["id"] for r in transformed])
+            logging.info(f"Loaded {len(transformed)} {self.name} records into Elasticsearch")
 
 
 class ETLPipeline:
-    """ETL pipeline implementation for movies, genres, and people."""
-
-    def __init__(self, extractor: PostgresExtractor, transformer: Transformer, loader: ElasticLoader):
-        self.extractor = extractor
-        self.transformer = transformer
-        self.loader = loader
-        self.state = RedisStorage()
+    def __init__(self, extractor, loader, state):
+        self.entities = [
+            EntityETL("movies", extractor, extractor.fetch_movies, TransformerFactory.get("movie"), loader, state, "movies"),
+            EntityETL("genres", extractor, extractor.fetch_genres, TransformerFactory.get("genre"), loader, state, "genres"),
+            EntityETL("persons", extractor, extractor.fetch_people, TransformerFactory.get("person"), loader, state, "persons"),
+        ]
 
     def run(self, batch_size: int):
-        """Runs the full ETL process for all entity types."""
-        self._process_movies(batch_size)
-        self._process_genres(batch_size)
-        self._process_people(batch_size)
-
-    def _process_movies(self, batch_size: int):
-        """Fetch, transform, and load movie data."""
-        logging.info("Starting movie ETL pipeline...")
-        time = self.state.retrieve_state("movies_time")
-        ids = self.state.retrieve_state("movies_ids")
-
-        for rows in self.extractor.fetch_movies(time, ids, batch_size=batch_size):
-            transformed = [self.transformer.transform_movie(r) for r in rows]
-            self.loader.load_bulk(transformed, index="movies")
-            self._update_state("movies", rows, transformed)
-
-    def _process_genres(self, batch_size: int):
-        """Fetch, transform, and load genre data."""
-        logging.info("Starting genre ETL pipeline...")
-        time = self.state.retrieve_state("genres_time")
-        ids = self.state.retrieve_state("genres_ids")
-
-        for rows in self.extractor.fetch_genres(time, ids, batch_size=batch_size):
-            transformed = [self.transformer.transform_genre(r) for r in rows]
-            self.loader.load_bulk(transformed, index="genres")
-            self._update_state("genres", rows, transformed)
-
-    def _process_people(self, batch_size: int):
-        """Fetch, transform, and load person data."""
-        logging.info("Starting people ETL pipeline...")
-        time = self.state.retrieve_state("people_time")
-        ids = self.state.retrieve_state("people_ids")
-
-        for rows in self.extractor.fetch_people(time, ids, batch_size=batch_size):
-            transformed = [self.transformer.transform_person(r) for r in rows]
-            self.loader.load_bulk(transformed, index="persons")
-            self._update_state("persons", rows, transformed)
-
-    def _update_state(self, entity: str, rows: list[dict], transformed: list[dict]):
-        """Save latest batch state for entity."""
-        if not rows:
-            return
-        self.state.save_state(f"{entity}_time", rows[-1].get("updated") or rows[-1].get("created"))
-        self.state.save_state(f"{entity}_ids", [row["id"] for row in transformed])
-        logging.info(f"Loaded {len(transformed)} {entity} records into Elasticsearch")
+        for etl in self.entities:
+            etl.run(batch_size)
 
 
-if __name__ == "__main__":
-    # Entry point
+def main():
     postgres_dsl = {
         'dbname': settings.db_name,
         'user': settings.db_user,
@@ -77,14 +53,15 @@ if __name__ == "__main__":
         'host': settings.db_host,
         'port': settings.db_port,
     }
-
     extractor = PostgresExtractor(postgres_dsl)
-    transformer = Transformer()
-    loader = ElasticLoader(settings.elk_url)
-    pipeline = ETLPipeline(extractor, transformer, loader)
+    loader = ElasticLoader()
+    state = RedisStorage()
+    pipeline = ETLPipeline(extractor, loader, state)
     pipeline.run(batch_size=int(settings.batch_size))
 
-    # Start listening for DB changes
     listener = PostgresListener(postgres_dsl)
     for change in listener.wait_for_changes():
         listener.handle_change(change)
+
+if __name__ == "__main__":
+    main()

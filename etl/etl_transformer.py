@@ -1,35 +1,21 @@
 from typing import Any
 
 
-class Transformer:
-    """Преобразователь данных SQL в схему Elasticsearch."""
+class MovieTransformer:
+    ROLE_MAP = {"director": "directors", "actor": "actors", "writer": "writers"}
 
-    ROLE_MAP = {
-        "director": "directors",
-        "actor": "actors",
-        "writer": "writers",
-    }
-
-    def transform_movie(self, row: dict[str, Any]) -> dict[str, Any]:
-        """
-        Трансформация отдельной денормализованной строки фильма в документ Elasticsearch.
-        """
+    def transform(self, row: dict[str, Any]) -> dict[str, Any]:
         persons = row.get("persons") or []
-        genres = row.get("genres") or []
-        grouped = {"directors": [], "actors": [], "writers": []}
-
+        grouped = {v: [] for v in self.ROLE_MAP.values()}
         for p in persons:
             role = p.get("role")
             if role in self.ROLE_MAP:
-                grouped[self.ROLE_MAP[role]].append({
-                    "id": str(p["id"]),
-                    "name": p["name"],
-                })
+                grouped[self.ROLE_MAP[role]].append({"id": str(p["id"]), "name": p["name"]})
 
         return {
             "id": str(row["id"]),
             "rating": float(row["rating"]) if row["rating"] else None,
-            "genres": row["genres"] or [],
+            "genres": row.get("genres", []),
             "title": row["title"],
             "type": row["type"],
             "description": row["description"],
@@ -41,10 +27,9 @@ class Transformer:
             "writers": grouped["writers"],
         }
 
-    def transform_genre(self, row: dict[str, Any]) -> dict[str, Any]:
-        """
-        Трансформация строки жанра в документ Elasticsearch.
-        """
+
+class GenreTransformer:
+    def transform(self, row: dict[str, Any]) -> dict[str, Any]:
         return {
             "id": str(row["id"]),
             "name": row.get("name"),
@@ -53,13 +38,24 @@ class Transformer:
             "modified": row.get("modified"),
         }
 
-    def transform_person(self, row: dict[str, Any]) -> dict[str, Any]:
-        """
-        Трансформация строки человека в документ Elasticsearch.
-        """
+
+class PersonTransformer:
+    def transform(self, row: dict[str, Any]) -> dict[str, Any]:
         return {
             "id": str(row["id"]),
             "full_name": row.get("full_name"),
             "created": row.get("created"),
             "modified": row.get("modified"),
         }
+
+
+class TransformerFactory:
+    _registry = {
+        "movie": MovieTransformer(),
+        "genre": GenreTransformer(),
+        "person": PersonTransformer(),
+    }
+
+    @classmethod
+    def get(cls, type_: str):
+        return cls._registry[type_]
