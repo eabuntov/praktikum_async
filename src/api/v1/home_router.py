@@ -1,16 +1,26 @@
 from typing import Any, AsyncGenerator, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from elasticsearch import AsyncElasticsearch
-from repositories.elastic_repository import ElasticRepository, get_elastic_client
+
+from config.config import settings
+from repositories.elastic_repository import ElasticRepository
 from services.film_service import FilmService
 from models.models import FilmWork
 
 templates = Jinja2Templates(directory="templates")
 
 home_router = APIRouter(tags=["home"])
+
+async def get_elastic_client() -> AsyncGenerator[AsyncElasticsearch, Any]:
+    """Provides a shared Elasticsearch client for dependency injection."""
+    client = AsyncElasticsearch(hosts=[settings.elk_url], verify_certs=False)
+    try:
+        yield client
+    finally:
+        await client.close()
 
 def get_film_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> FilmService:
     """Factory for filmService."""

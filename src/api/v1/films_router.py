@@ -7,6 +7,13 @@ from services.film_service import FilmService
 
 films_router = APIRouter(prefix="/films", tags=["films"])
 
+async def get_elastic_client() -> AsyncElasticsearch:
+    """Dependency that provides a single Elasticsearch client."""
+    client = AsyncElasticsearch(hosts=[settings.elk_url], verify_certs=False)
+    try:
+        yield client
+    finally:
+        await client.close()
 
 def get_film_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> FilmService:
     repo = ElasticRepository(es, index="movies", model=FilmWork)
@@ -33,4 +40,5 @@ async def list_films(
     offset: int = Query(0, ge=0),
     service: FilmService = Depends(get_film_service),
 ):
+
     return await service.list_films(sort, sort_order, min_rating, max_rating, type, limit, offset)

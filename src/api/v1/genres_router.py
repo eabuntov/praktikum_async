@@ -1,13 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from typing import List, Optional
+
+from config.config import settings
 from models.models import Genre
 from repositories.elastic_repository import ElasticRepository
 from services.genre_service import GenreService
 
-from repositories.elastic_repository import get_elastic_client
-
 genres_router = APIRouter(prefix="/genres", tags=["genres"])
+
+async def get_elastic_client() -> AsyncElasticsearch:
+    client = AsyncElasticsearch(hosts=[settings.elk_url], verify_certs=False)
+    try:
+        yield client
+    finally:
+        await client.close()
 
 def get_genre_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> GenreService:
     repo = ElasticRepository(es, index="genres", model=Genre)
