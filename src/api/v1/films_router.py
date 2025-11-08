@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from typing import List, Optional
 from models.models import FilmWork
-from repositories.elastic_repository import ElasticRepository, get_elastic_client
+from repositories.elastic_repository import ElasticRepository
 from services.film_service import FilmService
+
+from config.config import settings
 
 films_router = APIRouter(prefix="/films", tags=["films"])
 
