@@ -1,5 +1,6 @@
 import pytest
 import aiohttp
+from http import HTTPStatus
 
 pytestmark = pytest.mark.asyncio
 
@@ -10,7 +11,7 @@ async def test_search_films_returns_json_array(api_base_url):
 
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{api_base_url}/search", params=params) as resp:
-            assert resp.status == 200, f"Expected 200, got {resp.status}"
+            assert resp.status == HTTPStatus.OK, f"Expected {HTTPStatus.OK}, got {resp.status}"
             data = await resp.json()
 
             assert isinstance(data, list), f"Expected list, got {type(data)}"
@@ -31,7 +32,7 @@ async def test_search_films_with_no_results(api_base_url):
 
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{api_base_url}/search", params=params) as resp:
-            assert resp.status == 200
+            assert resp.status == HTTPStatus.OK
             data = await resp.json()
             assert isinstance(data, list)
             assert len(data) == 0, f"Expected empty list, got {len(data)}"

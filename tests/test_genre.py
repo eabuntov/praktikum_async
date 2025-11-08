@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 import aiohttp
 import pytest
 
@@ -7,7 +9,7 @@ async def test_list_genres_returns_json_array(api_base_url):
     """Check that /genres/ returns a list of genre objects."""
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{api_base_url}/genres/") as resp:
-            assert resp.status == 200, f"Expected 200, got {resp.status}"
+            assert resp.status == HTTPStatus.OK, f"Expected {HTTPStatus.OK}, got {resp.status}"
             data = await resp.json()
             assert isinstance(data, list)
             if data:
@@ -22,7 +24,7 @@ async def test_list_genres_with_query_params(api_base_url):
         async with session.get(
             f"{api_base_url}/genres/", params={"limit": 5}
         ) as resp:
-            assert resp.status == 200
+            assert resp.status == HTTPStatus.OK
             data = await resp.json()
             assert isinstance(data, list)
             assert len(data) <= 5
@@ -33,7 +35,7 @@ async def test_get_genre_by_id(api_base_url):
     async with aiohttp.ClientSession() as session:
         # First, get one genre ID
         async with session.get(f"{api_base_url}/genres/?limit=1") as resp:
-            assert resp.status == 200
+            assert resp.status == HTTPStatus.OK
             data = await resp.json()
             if not data:
                 pytest.skip("No genres available in index")
@@ -41,7 +43,7 @@ async def test_get_genre_by_id(api_base_url):
 
         # Fetch same genre by ID
         async with session.get(f"{api_base_url}/genres/{genre_id}") as resp:
-            assert resp.status == 200
+            assert resp.status == HTTPStatus.OK
             genre = await resp.json()
             assert genre["id"] == genre_id
             assert "name" in genre
