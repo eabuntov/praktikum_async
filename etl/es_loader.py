@@ -25,8 +25,10 @@ class ElasticsearchHealthChecker:
         logging.info("⏳ Waiting for Elasticsearch...")
         while True:
             try:
-                r = requests.get(f"{self.url}/_cluster/health",
-                                 params={"wait_for_status": "yellow", "timeout": "1s"})
+                r = requests.get(
+                    f"{self.url}/_cluster/health",
+                    params={"wait_for_status": "yellow", "timeout": "1s"},
+                )
                 if r.ok and r.json().get("status") in ("yellow", "green"):
                     logging.info("✅ Elasticsearch is ready.")
                     break

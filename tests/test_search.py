@@ -9,7 +9,9 @@ async def test_search_films_returns_json_array(client):
     params = {"query": "Star", "page_number": 1, "page_size": 5}
     resp = client.get("/search", params=params)
 
-    assert resp.status_code == HTTPStatus.OK, f"Expected {HTTPStatus.OK}, got {resp.status_code}"
+    assert resp.status_code == HTTPStatus.OK, (
+        f"Expected {HTTPStatus.OK}, got {resp.status_code}"
+    )
     data = resp.json()
     assert isinstance(data, list), f"Expected list, got {type(data)}"
 

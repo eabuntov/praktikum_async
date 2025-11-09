@@ -9,6 +9,7 @@ from services.genre_service import GenreService
 
 genres_router = APIRouter(prefix="/genres", tags=["genres"])
 
+
 async def get_elastic_client() -> AsyncElasticsearch:
     client = AsyncElasticsearch(hosts=[settings.elk_url], verify_certs=False)
     try:
@@ -16,9 +17,13 @@ async def get_elastic_client() -> AsyncElasticsearch:
     finally:
         await client.close()
 
-def get_genre_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> GenreService:
+
+def get_genre_service(
+    es: AsyncElasticsearch = Depends(get_elastic_client),
+) -> GenreService:
     repo = ElasticRepository(es, index="genres", model=Genre)
     return GenreService(repo)
+
 
 @genres_router.get("/{genre_id}", response_model=Genre)
 async def get_genre(genre_id: str, service: GenreService = Depends(get_genre_service)):
@@ -27,6 +32,7 @@ async def get_genre(genre_id: str, service: GenreService = Depends(get_genre_ser
         return await service.get_genre(genre_id)
     except NotFoundError:
         raise HTTPException(status_code=404, detail="Genre not found")
+
 
 @genres_router.get("/", response_model=List[Genre])
 async def list_genres(

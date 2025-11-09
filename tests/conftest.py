@@ -5,6 +5,7 @@ import pytest
 from unittest.mock import AsyncMock
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
+
 sys.path.append("/opt/app/src")
 from services.film_service import FilmService
 from services.genre_service import GenreService
@@ -38,7 +39,6 @@ def mock_repo():
         "full_name": f"Mock Person {id_}",
     }
 
-
     repo.search.return_value = [
         {
             "id": "1",
@@ -68,6 +68,7 @@ def mock_repo():
 @pytest.fixture
 def mock_cache(monkeypatch):
     """Patch get_from_cache to always return None to skip Redis."""
+
     async def fake_get_from_cache(_):
         return None
 
@@ -123,28 +124,38 @@ async def client(mock_cache, film_service, genre_service, person_service):
 
     @app.get("/search")
     async def search_films(
-        query: str, page_number: int = 1, page_size: int = 10,
-        service: FilmService = Depends(get_film_service)
+        query: str,
+        page_number: int = 1,
+        page_size: int = 10,
+        service: FilmService = Depends(get_film_service),
     ):
         return await service.search_films(query, page_number, page_size)
 
     # ----------------------- GENRE ENDPOINTS -----------------------
     @app.get("/genres/{genre_id}")
-    async def get_genre(genre_id: str, service: GenreService = Depends(get_genre_service)):
+    async def get_genre(
+        genre_id: str, service: GenreService = Depends(get_genre_service)
+    ):
         return await service.get_genre(genre_id)
 
     @app.get("/genres/")
     async def list_genres(service: GenreService = Depends(get_genre_service)):
-        return await service.list_genres(sort=None, sort_order="asc", limit=10, offset=0)
+        return await service.list_genres(
+            sort=None, sort_order="asc", limit=10, offset=0
+        )
 
     # ----------------------- PERSON ENDPOINTS -----------------------
     @app.get("/persons/{person_id}")
-    async def get_person(person_id: str, service: PersonService = Depends(get_person_service)):
+    async def get_person(
+        person_id: str, service: PersonService = Depends(get_person_service)
+    ):
         return await service.get_person(person_id)
 
     @app.get("/persons/")
     async def list_persons(service: PersonService = Depends(get_person_service)):
-        return await service.list_people(sort=None, sort_order="asc", limit=10, offset=0)
+        return await service.list_people(
+            sort=None, sort_order="asc", limit=10, offset=0
+        )
 
     # ----------------------- HEALTHCHECK -----------------------
     @app.get("/health")

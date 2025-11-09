@@ -7,7 +7,9 @@ pytestmark = pytest.mark.anyio
 async def test_list_genres_returns_json_array(client):
     """Check that /genres/ returns a list of genre objects."""
     resp = client.get("/genres/")
-    assert resp.status_code == HTTPStatus.OK, f"Expected {HTTPStatus.OK}, got {resp.status_code}"
+    assert resp.status_code == HTTPStatus.OK, (
+        f"Expected {HTTPStatus.OK}, got {resp.status_code}"
+    )
     data = resp.json()
     assert isinstance(data, list)
     if data:

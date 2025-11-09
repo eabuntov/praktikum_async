@@ -10,7 +10,9 @@ class MovieTransformer:
         for p in persons:
             role = p.get("role")
             if role in self.ROLE_MAP:
-                grouped[self.ROLE_MAP[role]].append({"id": str(p["id"]), "name": p["name"]})
+                grouped[self.ROLE_MAP[role]].append(
+                    {"id": str(p["id"]), "name": p["name"]}
+                )
 
         return {
             "id": str(row["id"]),

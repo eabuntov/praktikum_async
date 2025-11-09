@@ -6,6 +6,7 @@ from repositories.elastic_repository import ElasticRepository
 
 logger = logging.getLogger(__name__)
 
+
 class GenreService:
     """Service handling genre search and retrieval."""
 
@@ -20,11 +21,7 @@ class GenreService:
         return await self.repo.get_by_id(genre_id)
 
     async def list_genres(
-        self,
-        sort: Optional[str],
-        sort_order: str,
-        limit: int,
-        offset: int
+        self, sort: Optional[str], sort_order: str, limit: int, offset: int
     ) -> list[Genre]:
         cache_key = f"genres:list:{sort}:{sort_order}:{limit}:{offset}"
         cached = await get_from_cache(cache_key)

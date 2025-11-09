@@ -15,12 +15,14 @@ import backoff
     jitter=None,
 )
 def connect_with_retry(dsn: Dict[str, Any]):
-    """Подключение к БД с backoff, 5 попыток подключения """
+    """Подключение к БД с backoff, 5 попыток подключения"""
     return psycopg2.connect(**dsn, cursor_factory=DictCursor)
 
 
 @contextmanager
-def get_db_cursor(dsn: Dict[str, Any]) -> Generator[psycopg2.extensions.cursor, None, None]:
+def get_db_cursor(
+    dsn: Dict[str, Any],
+) -> Generator[psycopg2.extensions.cursor, None, None]:
     """
     Контекстный менеджер, обеспечивающий подключение к БД
     Использует backoff для обработки сетевых ошибок.
@@ -39,17 +41,18 @@ def get_db_cursor(dsn: Dict[str, Any]) -> Generator[psycopg2.extensions.cursor, 
         conn.close()
 
 
-
 @backoff.on_exception(
     backoff.expo,
     (OperationalError, InterfaceError),
-    max_tries=None,      # Retry forever
+    max_tries=None,  # Retry forever
     jitter=backoff.full_jitter,
     on_backoff=lambda details: logging.warning(
         f"Reconnecting to Postgres (attempt {details['tries']})..."
     ),
 )
-def connect_and_listen(dsn: Dict[str, Any], channel: str) -> tuple[psycopg2.extensions.connection, psycopg2.extensions.cursor]:
+def connect_and_listen(
+    dsn: Dict[str, Any], channel: str
+) -> tuple[psycopg2.extensions.connection, psycopg2.extensions.cursor]:
     """Подключение к БД и установка триггеров для слежения за изменениями.
     :param dsn: Словарь с настройками подключения
     """

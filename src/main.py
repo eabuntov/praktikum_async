@@ -28,12 +28,15 @@ with open("api/v1/openapi.json", "r", encoding="utf-8") as f:
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 # Override FastAPI's openapi generation function
 def custom_openapi():
     return custom_openapi_schema
 
+
 # Assign it to the app
 app.openapi = custom_openapi
+
 
 @app.get("/health", response_class=JSONResponse)
 async def healthcheck():

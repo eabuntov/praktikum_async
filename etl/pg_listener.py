@@ -15,9 +15,9 @@ class PostgresListener:
         self.channel = channel
         self.conn, self.cur = connect_and_listen(dsn, channel)
 
-
-
-    def wait_for_changes(self, timeout: int = 5) -> Generator[dict[str, Any], None, None]:
+    def wait_for_changes(
+        self, timeout: int = 5
+    ) -> Generator[dict[str, Any], None, None]:
         """Ожидание событий"""
         logging.info(f"Listening for changes on '{self.channel}'...")
 

@@ -17,10 +17,12 @@ redis = aioredis.from_url(
 @backoff.on_exception(
     backoff.expo,
     RedisConnectionError,
-    max_time=60,               # stop after 60 seconds total
-    max_tries=5,               # or after 5 attempts
+    max_time=60,  # stop after 60 seconds total
+    max_tries=5,  # or after 5 attempts
     jitter=backoff.full_jitter,
-    on_backoff=lambda d: print(f"⚠️ Retrying Redis connection (attempt {d['tries']})..."),
+    on_backoff=lambda d: print(
+        f"⚠️ Retrying Redis connection (attempt {d['tries']})..."
+    ),
 )
 async def get_from_cache(key: str):
     """Retrieve value from Redis cache (with retry if Redis temporarily unavailable)."""
