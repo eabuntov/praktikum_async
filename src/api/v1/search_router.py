@@ -9,6 +9,7 @@ from services.film_service import FilmService
 
 films_search_router = APIRouter(prefix="/search", tags=["search"])
 
+
 # --- Dependencies ---
 async def get_elastic_client() -> AsyncGenerator[AsyncElasticsearch, Any]:
     """Provide a single Elasticsearch client per request."""
@@ -19,7 +20,9 @@ async def get_elastic_client() -> AsyncGenerator[AsyncElasticsearch, Any]:
         await client.close()
 
 
-def get_film_service(es: AsyncElasticsearch = Depends(get_elastic_client)) -> FilmService:
+def get_film_service(
+    es: AsyncElasticsearch = Depends(get_elastic_client),
+) -> FilmService:
     """Build FilmService with an Elasticsearch repository."""
     repo = ElasticRepository(es, index="movies", model=FilmWork)
     return FilmService(repo)
@@ -37,4 +40,6 @@ async def search_films(
     Search films by title or description.
     Returns paginated FilmWork results.
     """
-    return await service.search_films(query=query, page_number=page_number, page_size=page_size)
+    return await service.search_films(
+        query=query, page_number=page_number, page_size=page_size
+    )

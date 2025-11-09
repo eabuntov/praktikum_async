@@ -38,13 +38,13 @@ class RedisStorage(BaseStorage):
 
     def save_state(self, key: str, value: Any) -> None:
         """охраняем состояние в виде даты или JSON-строки"""
-        self.redis_adapter.set(self._full_key(key),
-                               StateSerializer.serialize(value))
+        self.redis_adapter.set(self._full_key(key), StateSerializer.serialize(value))
 
     def retrieve_state(self, key: str) -> Optional[str | dict]:
         """Получение состояния."""
         data = self.redis_adapter.get(self._full_key(key))
         return StateSerializer.deserialize(data)
+
 
 class StateSerializer:
     @staticmethod

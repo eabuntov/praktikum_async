@@ -1,5 +1,6 @@
 import logging
 import sys
+
 sys.path.append("/opt")
 from config.config import settings
 from es_loader import ElasticLoader
@@ -10,7 +11,9 @@ from etl_transformer import TransformerFactory
 
 
 class EntityETL:
-    def __init__(self, name: str, extractor, fetch_fn, transformer, loader, state, index: str):
+    def __init__(
+        self, name: str, extractor, fetch_fn, transformer, loader, state, index: str
+    ):
         self.name = name
         self.extractor = extractor
         self.fetch_fn = fetch_fn
@@ -27,17 +30,48 @@ class EntityETL:
             transformed = [self.transformer.transform(r) for r in rows]
             self.loader.load_bulk(transformed, index=self.index)
             if rows:
-                self.state.save_state(f"{self.name}_time", rows[-1].get("updated") or rows[-1].get("created"))
-                self.state.save_state(f"{self.name}_ids", [r["id"] for r in transformed])
-            logging.info(f"Loaded {len(transformed)} {self.name} records into Elasticsearch")
+                self.state.save_state(
+                    f"{self.name}_time",
+                    rows[-1].get("updated") or rows[-1].get("created"),
+                )
+                self.state.save_state(
+                    f"{self.name}_ids", [r["id"] for r in transformed]
+                )
+            logging.info(
+                f"Loaded {len(transformed)} {self.name} records into Elasticsearch"
+            )
 
 
 class ETLPipeline:
     def __init__(self, extractor, loader, state):
         self.entities = [
-            EntityETL("movies", extractor, extractor.fetch_movies, TransformerFactory.get("movie"), loader, state, "movies"),
-            EntityETL("genres", extractor, extractor.fetch_genres, TransformerFactory.get("genre"), loader, state, "genres"),
-            EntityETL("persons", extractor, extractor.fetch_people, TransformerFactory.get("person"), loader, state, "persons"),
+            EntityETL(
+                "movies",
+                extractor,
+                extractor.fetch_movies,
+                TransformerFactory.get("movie"),
+                loader,
+                state,
+                "movies",
+            ),
+            EntityETL(
+                "genres",
+                extractor,
+                extractor.fetch_genres,
+                TransformerFactory.get("genre"),
+                loader,
+                state,
+                "genres",
+            ),
+            EntityETL(
+                "persons",
+                extractor,
+                extractor.fetch_people,
+                TransformerFactory.get("person"),
+                loader,
+                state,
+                "persons",
+            ),
         ]
 
     def run(self, batch_size: int):
@@ -47,11 +81,11 @@ class ETLPipeline:
 
 def main():
     postgres_dsl = {
-        'dbname': settings.db_name,
-        'user': settings.db_user,
-        'password': settings.db_password,
-        'host': settings.db_host,
-        'port': settings.db_port,
+        "dbname": settings.db_name,
+        "user": settings.db_user,
+        "password": settings.db_password,
+        "host": settings.db_host,
+        "port": settings.db_port,
     }
     extractor = PostgresExtractor(postgres_dsl)
     loader = ElasticLoader()
@@ -62,6 +96,7 @@ def main():
     listener = PostgresListener(postgres_dsl)
     for change in listener.wait_for_changes():
         listener.handle_change(change)
+
 
 if __name__ == "__main__":
     main()

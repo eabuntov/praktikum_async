@@ -14,5 +14,3 @@ COPY requirements.txt .
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
-# Collect static files and run migrations before starting uWSGI
-CMD python3 etl_pipeline.py

@@ -6,6 +6,7 @@ from repositories.elastic_repository import ElasticRepository
 
 logger = logging.getLogger(__name__)
 
+
 class FilmService:
     """Service handling film search and retrieval."""
 
@@ -27,7 +28,7 @@ class FilmService:
         max_rating: Optional[float] = 10.0,
         type_: Optional[str] = "movie",
         limit: int = 10,
-        offset: int = 0
+        offset: int = 0,
     ) -> list[FilmWork]:
         cache_key = f"films:list:{sort}:{sort_order}:{min_rating}:{max_rating}:{type_}:{limit}:{offset}"
         cached = await get_from_cache(cache_key)
@@ -48,9 +49,7 @@ class FilmService:
             filters.append({"term": {"type.keyword": type_}})
 
         body = {
-            "query": {
-                "bool": {"must": must or [{"match_all": {}}], "filter": filters}
-            },
+            "query": {"bool": {"must": must or [{"match_all": {}}], "filter": filters}},
             "from": offset,
             "size": limit,
         }
@@ -62,10 +61,7 @@ class FilmService:
         return await self.repo.search(body)
 
     async def search_films(
-            self,
-            query: str,
-            page_number: int = 1,
-            page_size: int = 10
+        self, query: str, page_number: int = 1, page_size: int = 10
     ) -> list[FilmWork]:
         """Full-text search for films by title or description."""
         cache_key = f"films:search:{query}:{page_number}:{page_size}"
@@ -79,12 +75,14 @@ class FilmService:
                 "multi_match": {
                     "query": query,
                     "fields": ["title", "description", "genres", "directors_names"],
-                    "fuzziness": "auto"
+                    "fuzziness": "auto",
                 }
             },
             "from": (page_number - 1) * page_size,
             "size": page_size,
         }
 
-        logger.info(f"Searching films: query='{query}', page={page_number}, size={page_size}")
+        logger.info(
+            f"Searching films: query='{query}', page={page_number}, size={page_size}"
+        )
         return await self.repo.search(body)

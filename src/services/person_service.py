@@ -6,6 +6,7 @@ from repositories.elastic_repository import ElasticRepository
 
 logger = logging.getLogger(__name__)
 
+
 class PersonService:
     """Service handling person search and retrieval."""
 
@@ -20,11 +21,7 @@ class PersonService:
         return await self.repo.get_by_id(person_id)
 
     async def list_people(
-        self,
-        sort: Optional[str],
-        sort_order: str,
-        limit: int,
-        offset: int
+        self, sort: Optional[str], sort_order: str, limit: int, offset: int
     ) -> list[Person]:
         cache_key = f"people:list:{sort}:{sort_order}:{limit}:{offset}"
         cached = await get_from_cache(cache_key)

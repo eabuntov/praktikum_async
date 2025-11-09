@@ -1,11 +1,18 @@
 import pytest
-import aiohttp
+from http import HTTPStatus
 
-pytestmark = pytest.mark.asyncio
+pytestmark = pytest.mark.anyio
 
-async def test_healthcheck(api_base_url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{api_base_url}/health") as resp:
-            assert resp.status == 200
-            data = await resp.json()
-            assert data.get("status") == "ok"  # optional if your endpoint returns {"status": "ok"}
+
+async def test_healthcheck(client):
+    """Ensure /health endpoint responds correctly."""
+    resp = client.get("/health")
+
+    assert resp.status_code == HTTPStatus.OK, (
+        f"Expected {HTTPStatus.OK}, got {resp.status_code}"
+    )
+
+    # if the endpoint returns JSON like {"status": "ok"}
+    data = resp.json()
+    assert isinstance(data, dict), f"Expected dict, got {type(data)}"
+    assert data.get("status") == "ok", f"Expected status='ok', got {data}"
