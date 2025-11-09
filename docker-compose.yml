@@ -169,12 +169,12 @@ services:
   test:
     build:
       context: ./tests
-    depends_on:
-      fastapi_app:
-        condition: service_healthy
-    command: [ "pytest", "-v", "--maxfail=1", "--disable-warnings", "-q" ]
+    command: [ "pytest", "-v", "./", "--maxfail=1", "--disable-warnings", "-q" ]
+    env_file:
+      - .env
     volumes:
-      - ./tests:/opt/app/tests
+      - ./:/opt/app/
+      - ./config:/opt/app/src/config
     networks:
       - app-network
 
