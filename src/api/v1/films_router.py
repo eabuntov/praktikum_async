@@ -6,8 +6,9 @@ from repositories.elastic_repository import ElasticRepository
 from services.film_service import FilmService
 
 from config.config import settings
+from dependencies.auth import get_current_user
 
-films_router = APIRouter(prefix="/films", tags=["films"])
+films_router = APIRouter(prefix="/films", tags=["films"], dependencies=[Depends(get_current_user)],)
 
 
 async def get_elastic_client() -> AsyncElasticsearch:

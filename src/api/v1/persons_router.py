@@ -7,7 +7,9 @@ from models.models import Person
 from repositories.elastic_repository import ElasticRepository
 from services.person_service import PersonService
 
-persons_router = APIRouter(prefix="/persons", tags=["persons"])
+from dependencies.auth import get_current_user
+
+persons_router = APIRouter(prefix="/persons", tags=["persons"], dependencies=[Depends(get_current_user)])
 
 
 async def get_elastic_client() -> AsyncElasticsearch:
