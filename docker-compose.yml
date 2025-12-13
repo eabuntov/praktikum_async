@@ -1,4 +1,19 @@
 services:
+  django_app:
+    build:
+      context: ./movies_admin
+    expose:
+      - "8000"
+    env_file:
+      - .env
+    networks:
+      - app-network
+    volumes:
+      - django_static:/opt/app/static
+      - ./movies_admin:/opt/app
+    depends_on:
+      - theatre-db
+
   fastapi_app:
     build:
       context: ./src/
@@ -80,24 +95,6 @@ services:
       retries: 5
       start_period: 5s
 
-#  pgadmin:
-#    image: 'docker.io/dpage/pgadmin4:9.8.0'
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: "e.a.buntov@gmail.com"
-#      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
-#    ports:
-#      - "8080:80"
-#    volumes:
-#      - pgadmin-data:/var/lib/pgadmin/
-#    networks:
-#      - app-network
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "5m"
-#        max-file: "3"
-#        tag: "pgadmin"
-
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.1.5
     container_name: elasticsearch
@@ -123,24 +120,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
-
-#  kibana:
-#    image: docker.elastic.co/kibana/kibana:9.1.5
-#    container_name: kibana
-#    environment:
-#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-#    ports:
-#      - "5601:5601"
-#    depends_on:
-#      - elasticsearch
-#    networks:
-#      - app-network
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "10m"
-#        max-file: "3"
-#        tag: "kibana"
 
   etl_worker:
     build:
@@ -178,11 +157,30 @@ services:
     networks:
       - app-network
 
+  auth:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: auth_app
+
+  auth_db:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: auth_db
+
+  auth_redis:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: auth_redis
+
+
 volumes:
   theatre_db_data:
   pgadmin-data:
   redis_data:
   es_data:
+  auth_db_data:
+  auth_redis_data:
+  django_static:
 
 networks:
   app-network:
