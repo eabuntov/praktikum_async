@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies import get_subscription_service
 from models.models import SubscriptionAssign, SubscriptionRead, StandardResponse
 from services.subscription_service import SubscriptionService
+from rate_limit.rate_limiter import rate_limit
 
-subscriptions_router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
+subscriptions_router = APIRouter(prefix="/subscriptions", tags=["subscriptions"], dependencies=[Depends(rate_limit("auth"))])
 
 
 @subscriptions_router.post("/assign", response_model=SubscriptionRead)

@@ -20,7 +20,9 @@ from services.login_history_service import LoginHistoryService
 from services.user_service import UserService
 from services.token_service import TokenService
 
-auth_router = APIRouter(prefix="/auth", tags=["auth"])
+from rate_limit.rate_limiter import rate_limit
+
+auth_router = APIRouter(prefix="/auth", tags=["auth"], dependencies=[Depends(rate_limit("auth"))])
 
 
 @auth_router.post("/register", response_model=UserRead)

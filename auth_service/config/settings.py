@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = Field(..., env="REDIS-HOST")
     DATABASE_URL: str = Field(..., env="AUTH_DATABASE_URL")
     PROJECT_NAME: str = "Auth Service"
+    RATE_LIMIT: int = Field(20, env="RATE_LIMIT")
+    WINDOW_SECONDS: int = Field(60, env="WINDOW_SECONDS")
 
 
 settings = Settings()
