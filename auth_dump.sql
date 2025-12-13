@@ -91,13 +91,6 @@ VALUES
          'DEFAULT'
     ),
     (
-        '00000000-0000-0000-0000-000000000001',
-        'user',
-        'Basic user role',
-        'read:public_content,watch:movies',
-        'DEFAULT'
-    ),
-    (
         '00000000-0000-0000-0000-000000000002',
         'premium',
         'Premium subscription role',

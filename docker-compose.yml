@@ -2,8 +2,8 @@ services:
   django_app:
     build:
       context: ./movies_admin
-    expose:
-      - "8000"
+    ports:
+      - "8002:8002"
     env_file:
       - .env
     networks:
@@ -171,6 +171,18 @@ services:
     extends:
       file: auth_service/docker-compose.yml
       service: auth_redis
+
+  pgadmin:
+    image: 'docker.io/dpage/pgadmin4:9.8.0'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "e.a.buntov@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin/
+    networks:
+      - app-network
 
 
 volumes:

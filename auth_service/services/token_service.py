@@ -8,7 +8,7 @@ from security.jwt_routines import JWTHandler
 class TokenService:
     def __init__(self, jwt_handler: Optional[JWTHandler] = None):
         self.jwt = jwt_handler or JWTHandler()
-        self.refresh_expire_seconds = settings.refresh_expire_seconds
+        self.refresh_expire_seconds = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
     def create_access_token(
         self,

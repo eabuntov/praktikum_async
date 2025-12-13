@@ -42,12 +42,16 @@ async def login_user(
 ):
     user = await users.authenticate(data.email, data.password)
 
-    # store login event
-    await history.record_login(
-        user.id, request.client.host, request.headers.get("User-Agent")
+    if user:
+        await history.record_login(
+            user.id, request.client.host, request.headers.get("User-Agent")
+        )
+        return tokens.create_token_pair(user)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Incorrect username or password",
+        headers={"WWW-Authenticate": "Basic"},
     )
-
-    return tokens.create_token_pair(user)
 
 
 @auth_router.post("/refresh")
@@ -133,3 +137,7 @@ async def get_login_history(
         limit=page_size,
         offset=offset,
     )
+
+@auth_router.get("/me", response_model=UserRead)
+async def get_me(current_user: User = Depends(require_authenticated_user)):
+    return current_user
