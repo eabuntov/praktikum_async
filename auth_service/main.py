@@ -2,9 +2,18 @@ import json
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+from config.settings import settings
+from services.tracing import setup_tracing
 from api.v1.api_router import api_router
 
-app = FastAPI()
+
+setup_tracing()
+
+app = FastAPI(title=settings.SERVICE_NAME)
+
+FastAPIInstrumentor.instrument_app(app)
 
 with open("api/v1/openapi_ru.json", "r", encoding="utf-8") as f:
     custom_openapi_schema = json.load(f)

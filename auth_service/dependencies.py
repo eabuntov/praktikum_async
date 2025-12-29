@@ -4,6 +4,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from redis import Redis
 from fastapi import Depends, HTTPException, status
 
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
 from repositories.login_history_repository import LoginHistoryRepository
 from repositories.user_repository import UserRepository
 from repositories.roles_repository import RoleRepository
@@ -30,6 +32,12 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=bool(settings.db_echo),
 )
+
+# SQLAlchemyInstrumentor().instrument(
+#     engine=engine,
+#     enable_commenter=True,
+#     commenter_options={"db_driver": True},
+# )
 
 # Session factory
 AsyncSessionLocal = async_sessionmaker(

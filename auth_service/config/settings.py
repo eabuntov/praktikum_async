@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Auth Service"
     RATE_LIMIT: int = Field(20, env="RATE_LIMIT")
     WINDOW_SECONDS: int = Field(60, env="WINDOW_SECONDS")
-
+    SERVICE_NAME: str = Field("auth-service", env="SERVICE_NAME")
+    ENVIRONMENT: str = Field("production", env="ENVIRONMENT")
+    LOG_LEVEL: str = Field("INFO", env="LOG_LEVEL")
+    JAEGER_AGENT_HOST: str = Field("jaeger", env="JAEGER_AGENT_HOST")
+    JAEGER_AGENT_PORT: str = Field("6831", env="JAEGER_AGENT_PORT")
+    OTEL_TRACES_SAMPLER: str = Field("parentbased_traceidratio", env="OTEL_TRACES_SAMPLER")
+    OTEL_TRACES_SAMPLER_ARG: str = Field("0.1", env="OTEL_TRACES_SAMPLER_ARG")
 
 settings = Settings()

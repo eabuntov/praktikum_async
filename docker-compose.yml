@@ -172,17 +172,22 @@ services:
       file: auth_service/docker-compose.yml
       service: auth_redis
 
-  pgadmin:
-    image: 'docker.io/dpage/pgadmin4:9.8.0'
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "e.a.buntov@gmail.com"
-      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "8080:80"
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin/
-    networks:
-      - app-network
+  jaeger:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: jaeger
+
+#  pgadmin:
+#    image: 'docker.io/dpage/pgadmin4:9.8.0'
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: "e.a.buntov@gmail.com"
+#      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
+#    ports:
+#      - "8080:80"
+#    volumes:
+#      - pgadmin-data:/var/lib/pgadmin/
+#    networks:
+#      - app-network
 
 
 volumes:
