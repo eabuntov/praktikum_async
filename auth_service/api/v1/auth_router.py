@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query, Form
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from redis import Redis
 from sqlalchemy import UUID
 from dependencies import (
@@ -143,3 +145,34 @@ async def get_login_history(
 @auth_router.get("/me", response_model=UserRead)
 async def get_me(current_user: User = Depends(require_authenticated_user)):
     return current_user
+
+templates = Jinja2Templates(directory="templates")
+
+@auth_router.get("/login", response_class=HTMLResponse)
+async def login_yandex(
+request: Request
+):
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request}
+    )
+
+
+@auth_router.post("/login-form")
+async def login_form(
+    email: str = Form(...),
+    password: str = Form(...),
+    request: Request = None,
+    users: UserService = Depends(get_user_service),
+    tokens: TokenService = Depends(get_token_service),
+    history: LoginHistoryService = Depends(get_login_history_service),
+):
+    user = await users.authenticate(email, password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    await history.record_login(
+        user.id, request.client.host, request.headers.get("User-Agent")
+    )
+
+    return tokens.create_token_pair(user)

@@ -101,3 +101,28 @@ class UserService:
                 permissions.update(ents)
 
         return permissions
+
+    async def get_or_create_oauth_user(
+            self,
+            provider: str,
+            provider_id: str,
+            email: str | None,
+            full_name: str | None,
+    ):
+        user = await self.repo.get_by_oauth(provider, provider_id)
+
+        if user:
+            return user
+
+        if email:
+            user = await self.repo.get_by_email(email)
+            if user:
+                await self.repo.attach_oauth(user.id, provider, provider_id)
+                return user
+
+        return await self.repo.create_oauth_user(
+            email=email,
+            full_name=full_name,
+            provider=provider,
+            provider_id=provider_id,
+        )
