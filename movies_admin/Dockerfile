@@ -1,0 +1,30 @@
+FROM python:3.13-slim
+
+WORKDIR /opt/app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UWSGI_PROCESSES=1 \
+    UWSGI_THREADS=16 \
+    UWSGI_HARAKIRI=240 \
+    DJANGO_SETTINGS_MODULE=config.settings
+
+COPY requirements.txt .
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /var/www/static/ \
+    && mkdir -p /var/www/media/ \
+    && mkdir -p /opt/app/static/ \
+    && mkdir -p /opt/app/media/ \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+EXPOSE 8000
+
+# Collect static files and run migrations before starting uWSGI
+CMD python manage.py migrate --noinput && \
+    python manage.py collectstatic --noinput && \
+    uwsgi --strict --ini uwsgi.ini

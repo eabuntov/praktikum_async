@@ -1,0 +1,7 @@
+uwsgi==2.0.30
+Django==5.0.4
+psycopg2-binary==2.9.10
+python-dotenv==1.0.1
+split-settings==1.0.0
+djangorestframework==3.16.1
+requests==2.32.5
