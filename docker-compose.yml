@@ -176,7 +176,11 @@ services:
     extends:
       file: auth_service/docker-compose.yml
       service: jaeger
-
+  
+  nginx:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: nginx
 #  pgadmin:
 #    image: 'docker.io/dpage/pgadmin4:9.8.0'
 #    environment:

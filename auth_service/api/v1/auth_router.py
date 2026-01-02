@@ -24,6 +24,8 @@ from services.token_service import TokenService
 
 from rate_limit.rate_limiter import rate_limit
 
+from auth_service.api.v1.oauth_classes import OAuthProvider
+
 auth_router = APIRouter(prefix="/auth", tags=["auth"], dependencies=[Depends(rate_limit("auth"))])
 
 
@@ -149,13 +151,22 @@ async def get_me(current_user: User = Depends(require_authenticated_user)):
 templates = Jinja2Templates(directory="templates")
 
 @auth_router.get("/login", response_class=HTMLResponse)
-async def login_yandex(
+async def login_oauth(
 request: Request
 ):
     return templates.TemplateResponse(
         "login.html",
         {"request": request}
     )
+
+@auth_router.get("/oauth/{provider}")
+async def oauth_login(provider: str, request: Request):
+    oauth = OAuthProvider.get_provider(provider)
+
+    redirect_uri = str(request.url_for("oauth_callback", provider=provider))
+    return {
+        "authorize_url": oauth.get_authorize_url(redirect_uri)
+    }
 
 
 @auth_router.post("/login-form")
@@ -176,3 +187,30 @@ async def login_form(
     )
 
     return tokens.create_token_pair(user)
+
+@auth_router.get("/oauth/{provider}/callback", name="oauth_callback")
+async def oauth_callback(
+    provider: str,
+    code: str,
+    request: Request,
+    users: UserService = Depends(get_user_service),
+    tokens: TokenService = Depends(get_token_service),
+):
+    oauth = OAuthProvider.get_provider(provider)
+
+    redirect_uri = str(request.url_for("oauth_callback", provider=provider))
+
+    token_data = await oauth.exchange_code(code, redirect_uri)
+    access_token = token_data["access_token"]
+
+    profile = await oauth.fetch_userinfo(access_token)
+
+    user = await users.get_or_create_oauth_user(
+        provider=provider,
+        provider_id=profile.get("id"),
+        email=profile.get("email"),
+        full_name=profile.get("name"),
+    )
+
+    access, refresh = tokens.create_token_pair(user)
+    return {"access_token": access, "refresh_token": refresh}
