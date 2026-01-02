@@ -24,7 +24,7 @@ from services.token_service import TokenService
 
 from rate_limit.rate_limiter import rate_limit
 
-from auth_service.api.v1.oauth_classes import OAuthProvider
+from api.v1.oauth_classes import OAuthProvider
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"], dependencies=[Depends(rate_limit("auth"))])
 
