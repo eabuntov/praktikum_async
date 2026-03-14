@@ -1,0 +1,5 @@
+taskiq
+taskiq-redis
+psycopg2-binary
+sqlalchemy
+requests

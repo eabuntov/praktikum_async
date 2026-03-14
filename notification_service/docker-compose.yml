@@ -1,0 +1,226 @@
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  notification_pgdata:
+  redis_data:
+  theatre_db_data:
+  auth_db_data:
+  auth_redis_data:
+  django_static:
+
+services:
+
+  # ===============================
+  # Notification Database
+  # ===============================
+  notification_db:
+    image: postgres:17.6-alpine
+    container_name: notification_db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${NOTIF_DB_NAME}
+      POSTGRES_USER: ${NOTIF_DB_USER}
+      POSTGRES_PASSWORD: ${NOTIF_DB_PASSWORD}
+    volumes:
+      - notification_pgdata:/var/lib/postgresql/data
+      - ./notification_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NOTIF_DB_USER} -d ${NOTIF_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===============================
+  # Redis (rate limits, checkpoints)
+  # ===============================
+  notification_redis:
+    image: redis:8.2.2-alpine
+    expose:
+      - "6379"
+    container_name: notification_redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  # ===============================
+  # Notification API
+  # ===============================
+  notification_api:
+    build:
+      context: ./notification_api/
+    container_name: notification_api
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${NOTIF_DB_URL}
+      REDIS_URL: redis://notification_redis:6379/0
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JAEGER_AGENT_HOST: jaeger
+    depends_on:
+      notification_db:
+        condition: service_healthy
+      notification_redis:
+        condition: service_started
+    volumes:
+      - ./notification_api:/opt/app
+      - ./config:/opt/config
+    networks:
+      - app-network
+    ports:
+      - "8081:8000"
+    restart: unless-stopped
+
+  # ===============================
+  # Notification Worker (email)
+  # ===============================
+  notification_worker:
+    build:
+      context: ./notification_worker
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${NOTIF_DB_URL}
+      REDIS_URL: redis://notification_redis:6379/0
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_GROUP_ID: notification-workers
+      EMAIL_PROVIDER: ses   # or sendgrid, smtp
+      JAEGER_AGENT_HOST: jaeger
+    depends_on:
+      notification_db:
+        condition: service_healthy
+      notification_redis:
+        condition: service_started
+    volumes:
+      - ./notification_worker:/opt/app
+      - ./config:/opt/config
+    networks:
+      - app-network
+    deploy:
+      replicas: 3
+    restart: unless-stopped
+
+  # ===============================
+  # Auto Notification Generator
+  # ===============================
+  notification_generator:
+    build:
+      context: ./notification_generator
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${NOTIF_DB_URL}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      CLICKHOUSE_HOST: ch
+      REDIS_URL: redis://notification_redis:6379/0
+    depends_on:
+      notification_db:
+        condition: service_healthy
+    volumes:
+      - ./notification_generator:/opt/app
+      - ./config:/opt/config
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:4.1.1
+    container_name: kafka
+    hostname: kafka
+    expose:
+      - "9092"
+    networks:
+      - app-network
+    env_file:
+      - kafka.env
+    healthcheck:
+      test: /kafka/bin/kafka-cluster.sh cluster-id --bootstrap-server kafka:9092 || exit 1
+      interval: 1s
+      timeout: 60s
+      retries: 60
+
+  django_app:
+    build:
+      context: ./movies_admin
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    networks:
+      - app-network
+    volumes:
+      - django_static:/opt/app/static
+      - ./movies_admin:/opt/app
+    depends_on:
+      - theatre-db
+
+  theatre-db:
+    image: postgres:17.6-alpine
+    container_name: theatre-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - theatre_db_data:/var/lib/postgresql/data
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    expose:
+      - "${DB_PORT}"
+    networks:
+      - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "theatre-db"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  auth:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: auth_app
+
+  auth_db:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: auth_db
+
+  auth_redis:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: auth_redis
+
+  jaeger:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: jaeger
+
+  nginx:
+    extends:
+      file: auth_service/docker-compose.yml
+      service: nginx
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    env_file:
+      - .env
+    ports:
+      - "${SMTP_PORT}:${SMTP_PORT}"
+      - "8025:8025"
+    networks:
+      - app-network
+
